@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudentFlow | Learning made easier</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --green: #65a94f;
+      --green-light: #e4f5dc;
+      --bg: #f5faf1;
+      --forest: #29452d;
+      --muted: #71816d;
+      --border: #d8e9d0;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, #e4f5dc 0, transparent 35%),
+        var(--bg);
+      color: var(--forest);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1050px;
+      display: grid;
+      grid-template-columns: 1fr 430px;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 60px;
+    }
+
+    .brand span {
+      color: var(--green);
+    }
+
+    .intro h1 {
+      font-size: clamp(36px, 5vw, 58px);
+      line-height: 1.08;
+      margin-bottom: 20px;
+    }
+
+    .intro p {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+      max-width: 470px;
+    }
+
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .feature {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 15px 45px #29452d10;
+    }
+
+    .card h2 {
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .role-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 5px;
+      margin-bottom: 24px;
+    }
+
+    .role-button {
+      border: 0;
+      background: transparent;
+      padding: 12px;
+      border-radius: 9px;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .role-button.active {
+      background: var(--white);
+      color: var(--forest);
+      box-shadow: 0 2px 8px #29452d12;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 15px 0 7px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px #65a94f20;
+    }
+
+    .main-button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .main-button:hover {
+      background: #559440;
+    }
+
+    .toggle-text {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 20px;
+    }
+
+    .toggle-text button {
+      border: 0;
+      background: none;
+      color: var(--green);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .notice {
+      display: none;
+      margin-top: 15px;
+      padding: 12px;
+      background: var(--green-light);
+      color: var(--forest);
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 22px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+    }
+
+    @media (max-width: 800px) {
+      .container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        gap: 28px;
+      }
+
+      .brand {
+        margin-bottom: 25px;
+      }
+
+      .intro h1 {
+        font-size: 38px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <section class="intro">
+      <div class="brand" id="brandName">StudentFlow</div>
+
+      <h1>Make learning<br />feel more organized.</h1>
+
+      <p>
+        A calmer place for students to manage tasks, access learning materials,
+        and keep track of their progress.
+      </p>
+
+      <div class="features">
+        <div class="feature">✓ Organize tasks</div>
+        <div class="feature">✓ Learning materials</div>
+        <div class="feature">✓ Track progress</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 id="formTitle">Welcome back!</h2>
+      <p class="subtitle" id="formSubtitle">
+        Sign in to continue to your learning space.
+      </p>
+
+      <div class="role-switch">
+        <button class="role-button active" id="studentRole" type="button">
+          Student
+        </button>
+        <button class="role-button" id="teacherRole" type="button">
+          Teacher
+        </button>
+      </div>
+
+      <form id="authForm">
+        <div id="nameField" style="display: none;">
+          <label for="displayName">Your name</label>
+          <input
+            id="displayName"
+            type="text"
+            placeholder="Enter your name"
+            autocomplete="name"
+          />
+        </div>
+
+        <label for="email">Email address</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        />
+
+        <button class="main-button" id="submitButton" type="submit">
+          Sign in
+        </button>
+      </form>
+
+      <div class="notice" id="notice">
+        This is the welcome-screen prototype. Supabase authentication will be
+        connected in the next step.
+      </div>
+
+      <p class="toggle-text">
+        <span id="togglePrompt">New here?</span>
+        <button id="toggleMode" type="button">Create an account</button>
+      </p>
+
+      <div class="footer">
+        StudentFlow · A learning workspace prototype
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let selectedRole = "student";
+    let isSignUp = false;
+
+    const studentRole = document.getElementById("studentRole");
+    const brandName = document.getElementById("brandName");
+    const teacherRole = document.getElementById("teacherRole");
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+    const nameField = document.getElementById("nameField");
+    const submitButton = document.getElementById("submitButton");
+    const togglePrompt = document.getElementById("togglePrompt");
+    const toggleMode = document.getElementById("toggleMode");
+    const notice = document.getElementById("notice");
+    const authForm = document.getElementById("authForm");
+
+    function updateScreen() {
+      const appName =
+  selectedRole === "student" ? "StudentFlow" : "TeachersFlow";
+
+brandName.textContent = appName;
+document.title = appName + " | Learning made easier";
+      studentRole.classList.toggle("active", selectedRole === "student");
+      teacherRole.classList.toggle("active", selectedRole === "teacher");
+
+      nameField.style.display = isSignUp ? "block" : "none";
+
+      if (isSignUp) {
+        formTitle.textContent = "Create your account";
+        formSubtitle.textContent =
+          selectedRole === "student"
+            ? "Join StudentFlow and organize your learning."
+            : "Request a TeachersFlow account.";
+        submitButton.textContent = "Create account";
+        togglePrompt.textContent = "Already have an account?";
+        toggleMode.textContent = "Sign in";
+      } else {
+        formTitle.textContent =
+          selectedRole === "student" ? "Welcome back!" : "Welcome, teacher!";
+        formSubtitle.textContent =
+          selectedRole === "student"
+            ? "Sign in to your StudentFlow space."
+            : "Sign in to your TeachersFlow workspace.";
+        submitButton.textContent = "Sign in";
+        togglePrompt.textContent = "New here?";
+        toggleMode.textContent = "Create an account";
+      }
+
+      notice.style.display = "none";
+    }
+
+    studentRole.addEventListener("click", () => {
+      selectedRole = "student";
+      updateScreen();
+    });
+
+    teacherRole.addEventListener("click", () => {
+      selectedRole = "teacher";
+      updateScreen();
+    });
+
+    toggleMode.addEventListener("click", () => {
+      isSignUp = !isSignUp;
+      updateScreen();
+    });
+
+    authForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      notice.textContent =
+        "This is currently a visual prototype. Authentication will be connected to Supabase next.";
+      notice.style.display = "block";
+    });
+  </script>
+</body>
+</html>

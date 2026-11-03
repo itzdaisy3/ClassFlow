@@ -305,6 +305,17 @@
   <script>
     let selectedRole = "student";
     let isSignUp = false;
+    let selectedRole = "student";
+let isSignUp = false;
+
+// Supabase connection
+const SUPABASE_URL = sb_secret_ua9-N8O90vcY3yOz0DR91w_500LPMb2;
+const SUPABASE_PUBLISHABLE_KEY = sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i;
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 
     const studentRole = document.getElementById("studentRole");
     const brandName = document.getElementById("brandName");

@@ -306,6 +306,230 @@
         font-size: 11px;
       }
     }
+    /* =================================
+   STUDENTFLOW SAGE GREEN DASHBOARD
+================================= */
+
+#studentDashboard {
+  min-height: 100vh;
+  background: #F5FAF1;
+  color: #29452D;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#studentDashboard:not([style*="display:none"]) {
+  display: flex;
+}
+
+.dashboard-sidebar {
+  width: 245px;
+  min-height: 100vh;
+  background: #E4F5DC;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.dashboard-sidebar h2 {
+  font-size: 23px;
+  margin-bottom: 35px;
+  color: #29452D;
+}
+
+.dashboard-sidebar nav {
+  display: grid;
+  gap: 10px;
+}
+
+.nav-button {
+  border: none;
+  background: transparent;
+  color: #456448;
+  text-align: left;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-button:hover,
+.nav-button.active {
+  background: #B7E4A8;
+  color: #29452D;
+}
+
+.sign-out-button {
+  margin-top: auto;
+  border: 1px solid #C7DFC0;
+  background: white;
+  color: #456448;
+  padding: 13px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboard-content {
+  flex: 1;
+  min-width: 0;
+  padding: 35px;
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+  padding: 0;
+  display: block;
+}
+
+.dashboard-header h1 {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.dashboard-header p {
+  color: #71816D;
+  font-size: 15px;
+}
+
+.welcome-card {
+  background: #B7E4A8;
+  padding: 30px;
+  border-radius: 20px;
+  margin-bottom: 25px;
+}
+
+.welcome-card h2 {
+  font-size: 23px;
+  margin-bottom: 10px;
+}
+
+.welcome-card p {
+  color: #456448;
+  line-height: 1.6;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 17px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #D8E9D0;
+  border-radius: 17px;
+  padding: 23px;
+  display: grid;
+  gap: 12px;
+}
+
+.stat-card span {
+  color: #71816D;
+  font-size: 13px;
+}
+
+.stat-card strong {
+  font-size: 30px;
+  color: #29452D;
+}
+
+.dashboard-panel {
+  background: white;
+  border: 1px solid #D8E9D0;
+  border-radius: 18px;
+  padding: 25px;
+}
+
+.dashboard-panel h2 {
+  margin-bottom: 18px;
+  font-size: 20px;
+}
+
+.dashboard-page > h2 {
+  font-size: 27px;
+  margin-bottom: 10px;
+}
+
+.dashboard-page > p {
+  color: #71816D;
+  margin-bottom: 22px;
+}
+
+.task-form {
+  background: white;
+  padding: 20px;
+  border: 1px solid #D8E9D0;
+  border-radius: 16px;
+  margin: 20px 0;
+}
+
+.task-form input,
+.task-form select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #D8E9D0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: #F5FAF1;
+  color: #29452D;
+}
+
+.task-form button {
+  background: #65A94F;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#allTasksList,
+#priorityList,
+#notesList,
+#awardsList {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.task-item {
+  background: white;
+  border: 1px solid #D8E9D0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+@media (max-width: 750px) {
+  #studentDashboard:not([style*="display:none"]) {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .dashboard-sidebar nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sign-out-button {
+    margin-top: 20px;
+  }
+
+  .dashboard-content {
+    padding: 22px 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 
@@ -426,6 +650,105 @@
     </section>
   </main>
 
+  <!-- STUDENTFLOW DASHBOARD -->
+<section id="studentDashboard" style="display:none;">
+
+  <aside class="dashboard-sidebar">
+    <h2>🌿 StudentFlow</h2>
+
+    <nav>
+      <button class="nav-button active" data-page="dashboard">
+        🏠 Dashboard
+      </button>
+      <button class="nav-button" data-page="tasks">
+        ✓ My Tasks
+      </button>
+      <button class="nav-button" data-page="notes">
+        📚 Digital Notes
+      </button>
+      <button class="nav-button" data-page="awards">
+        🏆 Awards
+      </button>
+    </nav>
+
+    <button id="signOutButton" class="sign-out-button">
+      Sign out
+    </button>
+  </aside>
+
+  <div class="dashboard-content">
+
+    <header class="dashboard-header">
+      <div>
+        <h1 id="dashboardGreeting">Welcome to StudentFlow!</h1>
+        <p>Let's make today a little easier.</p>
+      </div>
+    </header>
+
+    <section id="dashboardPage" class="dashboard-page">
+      <div class="welcome-card">
+        <h2>One step at a time 🌱</h2>
+        <p>Stay organized, keep learning and celebrate your progress.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span>Tasks to do</span>
+          <strong id="tasksToDo">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Completed</span>
+          <strong id="tasksCompleted">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Award points</span>
+          <strong id="awardPoints">0</strong>
+        </div>
+      </div>
+
+      <div class="dashboard-panel">
+        <h2>Today's priorities</h2>
+        <div id="priorityList">Loading your tasks...</div>
+      </div>
+    </section>
+
+    <section id="tasksPage" class="dashboard-page" hidden>
+      <h2>My Tasks ✓</h2>
+      <p>Organize your schoolwork.</p>
+
+      <form id="taskForm" class="task-form">
+        <input id="taskTitle" type="text"
+          placeholder="What do you need to do?" required>
+
+        <select id="taskCategory">
+          <option>Must Do Today</option>
+          <option>Can Do Tomorrow</option>
+          <option>Can Be Simplified</option>
+        </select>
+
+        <button type="submit">Add task</button>
+      </form>
+
+      <div id="allTasksList"></div>
+    </section>
+
+    <section id="notesPage" class="dashboard-page" hidden>
+      <h2>Digital Notes 📚</h2>
+      <p>Your class learning materials will appear here.</p>
+      <div id="notesList">No learning materials yet.</div>
+    </section>
+
+    <section id="awardsPage" class="dashboard-page" hidden>
+      <h2>My Awards 🏆</h2>
+      <p>Celebrate your achievements!</p>
+      <div id="awardsList">Loading your awards...</div>
+    </section>
+
+  </div>
+</section>
+  
   <footer>
     StudentFlow & TeachersFlow · Prototype
   </footer>

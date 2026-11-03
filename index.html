@@ -302,95 +302,125 @@
     </section>
   </main>
 
-  <script>
-    let selectedRole = "student";
-    let isSignUp = false;
-let isSignUp = false;
 
-// Supabase connection
-const SUPABASE_URL = sb_secret_ua9-N8O90vcY3yOz0DR91w_500LPMb2;
-const SUPABASE_PUBLISHABLE_KEY = sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i;
+<script>
+  // App settings
+  let selectedRole = "student";
+  let isSignUp = false;
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
-    supabaseClient.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error("Supabase connection test failed:", error.message);
-  } else {
-    console.log("Supabase connection test passed!");
-  }
-});
+  // Supabase connection
+  const SUPABASE_URL = "zfgyxnjxqemgugbahiys";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i";
 
-    const studentRole = document.getElementById("studentRole");
-    const brandName = document.getElementById("brandName");
-    const teacherRole = document.getElementById("teacherRole");
-    const formTitle = document.getElementById("formTitle");
-    const formSubtitle = document.getElementById("formSubtitle");
-    const nameField = document.getElementById("nameField");
-    const submitButton = document.getElementById("submitButton");
-    const togglePrompt = document.getElementById("togglePrompt");
-    const toggleMode = document.getElementById("toggleMode");
-    const notice = document.getElementById("notice");
-    const authForm = document.getElementById("authForm");
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
 
-    function updateScreen() {
-      const appName =
-  selectedRole === "student" ? "StudentFlow" : "TeachersFlow";
+  // Test Supabase connection
+  supabaseClient.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.error("Supabase connection test failed:", error.message);
+    } else {
+      console.log("Supabase connection test passed!");
+    }
+  });
 
-brandName.textContent = appName;
-document.title = appName + " | Learning made easier";
-      studentRole.classList.toggle("active", selectedRole === "student");
-      teacherRole.classList.toggle("active", selectedRole === "teacher");
+  // Page elements
+  const studentRole = document.getElementById("studentRole");
+  const brandName = document.getElementById("brandName");
+  const teacherRole = document.getElementById("teacherRole");
+  const formTitle = document.getElementById("formTitle");
+  const formSubtitle = document.getElementById("formSubtitle");
+  const nameField = document.getElementById("nameField");
+  const submitButton = document.getElementById("submitButton");
+  const togglePrompt = document.getElementById("togglePrompt");
+  const toggleMode = document.getElementById("toggleMode");
+  const notice = document.getElementById("notice");
+  const authForm = document.getElementById("authForm");
 
-      nameField.style.display = isSignUp ? "block" : "none";
+  // Update the screen
+  function updateScreen() {
+    const appName =
+      selectedRole === "student" ? "StudentFlow" : "TeachersFlow";
 
-      if (isSignUp) {
-        formTitle.textContent = "Create your account";
-        formSubtitle.textContent =
-          selectedRole === "student"
-            ? "Join StudentFlow and organize your learning."
-            : "Request a TeachersFlow account.";
-        submitButton.textContent = "Create account";
-        togglePrompt.textContent = "Already have an account?";
-        toggleMode.textContent = "Sign in";
-      } else {
-        formTitle.textContent =
-          selectedRole === "student" ? "Welcome back!" : "Welcome, teacher!";
-        formSubtitle.textContent =
-          selectedRole === "student"
-            ? "Sign in to your StudentFlow space."
-            : "Sign in to your TeachersFlow workspace.";
-        submitButton.textContent = "Sign in";
-        togglePrompt.textContent = "New here?";
-        toggleMode.textContent = "Create an account";
-      }
+    brandName.textContent = appName;
+    document.title = appName + " | Learning made easier";
 
-      notice.style.display = "none";
+    studentRole.classList.toggle(
+      "active",
+      selectedRole === "student"
+    );
+
+    teacherRole.classList.toggle(
+      "active",
+      selectedRole === "teacher"
+    );
+
+    nameField.style.display = isSignUp ? "block" : "none";
+
+    if (isSignUp) {
+      formTitle.textContent = "Create your account";
+
+      formSubtitle.textContent =
+        selectedRole === "student"
+          ? "Join StudentFlow and organize your learning."
+          : "Request a TeachersFlow account.";
+
+      submitButton.textContent = "Create account";
+      togglePrompt.textContent = "Already have an account?";
+      toggleMode.textContent = "Sign in";
+
+    } else {
+      formTitle.textContent =
+        selectedRole === "student"
+          ? "Welcome back!"
+          : "Welcome, teacher!";
+
+      formSubtitle.textContent =
+        selectedRole === "student"
+          ? "Sign in to your StudentFlow space."
+          : "Sign in to your TeachersFlow workspace.";
+
+      submitButton.textContent = "Sign in";
+      togglePrompt.textContent = "New here?";
+      toggleMode.textContent = "Create an account";
     }
 
-    studentRole.addEventListener("click", () => {
-      selectedRole = "student";
-      updateScreen();
-    });
+    notice.style.display = "none";
+  }
 
-    teacherRole.addEventListener("click", () => {
-      selectedRole = "teacher";
-      updateScreen();
-    });
+  // Student role button
+  studentRole.addEventListener("click", () => {
+    selectedRole = "student";
+    updateScreen();
+  });
 
-    toggleMode.addEventListener("click", () => {
-      isSignUp = !isSignUp;
-      updateScreen();
-    });
+  // Teacher role button
+  teacherRole.addEventListener("click", () => {
+    selectedRole = "teacher";
+    updateScreen();
+  });
 
-    authForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      notice.textContent =
-        "This is currently a visual prototype. Authentication will be connected to Supabase next.";
-      notice.style.display = "block";
-    });
-  </script>
+  // Switch between sign in and sign up
+  toggleMode.addEventListener("click", () => {
+    isSignUp = !isSignUp;
+    updateScreen();
+  });
+
+  // Account form
+  authForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    notice.textContent =
+      "This is currently a prototype. Real account creation and sign-in will be connected next.";
+
+    notice.style.display = "block";
+  });
+
+  // Set the initial screen
+  updateScreen();
+</script>
+
 </body>
 </html>

@@ -754,210 +754,199 @@
   </footer>
 
   <script>
-    // =====================================
-    // SUPABASE CONNECTION
-    // =====================================
+/* =================================
+   SUPABASE CONNECTION
+   ================================= */
 
-    const SUPABASE_URL = "https://zfgyxnjxqemgugbahiys.supabase.co";
-    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i";
+// Replace these two values with your saved connection details.
+const SUPABASE_URL = "https://zfgyxnjxqemgugbahiys.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i";
 
-    const supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 
-    // =====================================
-    // APP SETTINGS
-    // =====================================
+/* =================================
+   LOGIN PAGE ELEMENTS
+   ================================= */
 
-    let selectedRole = "student";
-    let isSignUp = false;
+const loginHeader = document.querySelector("body > header");
+const loginMain = document.querySelector("body > main");
+const loginFooter = document.querySelector("body > footer");
 
-    // =====================================
-    // PAGE ELEMENTS
-    // =====================================
+const studentDashboard = document.getElementById("studentDashboard");
 
-    const studentRole = document.getElementById("studentRole");
-    const teacherRole = document.getElementById("teacherRole");
-    const brandName = document.getElementById("brandName");
+const studentRole = document.getElementById("studentRole");
+const teacherRole = document.getElementById("teacherRole");
+const authForm = document.getElementById("authForm");
+const displayNameInput = document.getElementById("displayName");
+const nameField = document.getElementById("nameField");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const submitButton = document.getElementById("submitButton");
+const togglePrompt = document.getElementById("togglePrompt");
+const toggleMode = document.getElementById("toggleMode");
+const notice = document.getElementById("notice");
 
-    const formTitle = document.getElementById("formTitle");
-    const formSubtitle = document.getElementById("formSubtitle");
+let selectedRole = "student";
+let isSignUp = false;
+let currentUser = null;
+let currentProfile = null;
+let cachedTasks = [];
 
-    const nameField = document.getElementById("nameField");
-    const displayName = document.getElementById("displayName");
+/* =================================
+   LOGIN SCREEN
+   ================================= */
 
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
+function updateScreen() {
+  if (nameField) {
+    nameField.style.display = isSignUp ? "block" : "none";
+  }
 
-    const submitButton = document.getElementById("submitButton");
-    const togglePrompt = document.getElementById("togglePrompt");
-    const toggleMode = document.getElementById("toggleMode");
+  if (submitButton) {
+    submitButton.textContent = isSignUp ? "Create account" : "Sign in";
+  }
 
-    const notice = document.getElementById("notice");
-    const authForm = document.getElementById("authForm");
+  if (togglePrompt) {
+    togglePrompt.textContent = isSignUp
+      ? "Already have an account?"
+      : "Don't have an account?";
+  }
 
-    // =====================================
-    // UPDATE THE SCREEN
-    // =====================================
+  if (toggleMode) {
+    toggleMode.textContent = isSignUp ? "Sign in" : "Create account";
+  }
 
-    function updateScreen() {
-      const appName =
-        selectedRole === "student"
-          ? "StudentFlow"
-          : "TeachersFlow";
+  if (studentRole) {
+    studentRole.classList.toggle("selected", selectedRole === "student");
+  }
 
-      brandName.textContent = appName;
-      document.title = appName + " | Learning made easier";
+  if (teacherRole) {
+    teacherRole.classList.toggle("selected", selectedRole === "teacher");
+  }
+}
 
-      studentRole.classList.toggle(
-        "active",
-        selectedRole === "student"
-      );
+function showNotice(message, isError = false) {
+  if (!notice) return;
 
-      teacherRole.classList.toggle(
-        "active",
-        selectedRole === "teacher"
-      );
+  notice.textContent = message;
+  notice.style.display = "block";
+  notice.style.color = isError ? "#B42318" : "#294761";
+}
 
-      nameField.style.display = isSignUp ? "block" : "none";
-      displayName.required = isSignUp;
+function hideNotice() {
+  if (notice) {
+    notice.style.display = "none";
+  }
+}
 
-      if (isSignUp) {
-        formTitle.textContent = "Create your account";
+function showLoginPage() {
+  if (studentDashboard) {
+    studentDashboard.style.display = "none";
+  }
 
-        formSubtitle.textContent =
-          selectedRole === "student"
-            ? "Join StudentFlow and organize your learning."
-            : "Create an account and request teacher access.";
+  if (loginHeader) loginHeader.style.display = "";
+  if (loginMain) loginMain.style.display = "";
+  if (loginFooter) loginFooter.style.display = "";
 
-        submitButton.textContent = "Create account";
-        togglePrompt.textContent = "Already have an account?";
-        toggleMode.textContent = "Sign in";
-        password.autocomplete = "new-password";
+  currentUser = null;
+  currentProfile = null;
+}
 
-      } else {
-        formTitle.textContent =
-          selectedRole === "student"
-            ? "Welcome back!"
-            : "Welcome, teacher!";
+function showStudentDashboard(user, profile) {
+  currentUser = user;
+  currentProfile = profile;
 
-        formSubtitle.textContent =
-          selectedRole === "student"
-            ? "Sign in to your StudentFlow space."
-            : "Sign in to your TeachersFlow workspace.";
+  if (loginHeader) loginHeader.style.display = "none";
+  if (loginMain) loginMain.style.display = "none";
+  if (loginFooter) loginFooter.style.display = "none";
 
-        submitButton.textContent = "Sign in";
-        togglePrompt.textContent = "New here?";
-        toggleMode.textContent = "Create an account";
-        password.autocomplete = "current-password";
+  if (studentDashboard) {
+    studentDashboard.style.display = "flex";
+  }
+
+  const greeting = document.getElementById("dashboardGreeting");
+
+  if (greeting) {
+    greeting.textContent = `Welcome back, ${profile.display_name}!`;
+  }
+
+  loadStudentData();
+}
+
+/* =================================
+   ROLE AND SIGN-UP CONTROLS
+   ================================= */
+
+if (studentRole) {
+  studentRole.addEventListener("click", () => {
+    selectedRole = "student";
+    hideNotice();
+    updateScreen();
+  });
+}
+
+if (teacherRole) {
+  teacherRole.addEventListener("click", () => {
+    selectedRole = "teacher";
+    hideNotice();
+    updateScreen();
+  });
+}
+
+if (toggleMode) {
+  toggleMode.addEventListener("click", () => {
+    isSignUp = !isSignUp;
+    hideNotice();
+    updateScreen();
+  });
+}
+
+/* =================================
+   AUTHENTICATION
+   ================================= */
+
+if (authForm) {
+  authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    hideNotice();
+
+    const userEmail = emailInput.value.trim();
+    const userPassword = passwordInput.value;
+    const userName = displayNameInput
+      ? displayNameInput.value.trim()
+      : "";
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Please wait...";
+
+    try {
+      if (selectedRole === "teacher") {
+        throw new Error(
+          "Teacher registration is not open yet. Please select Student for now."
+        );
       }
 
-      notice.style.display = "none";
-    }
+      if (isSignUp) {
+        if (!userName) {
+          throw new Error("Please enter your name.");
+        }
 
-    // =====================================
-    // SHOW A MESSAGE
-    // =====================================
-
-    function showNotice(message, isError = false) {
-      notice.textContent = message;
-      notice.style.display = "block";
-
-      notice.style.background = isError
-        ? "#fff0ef"
-        : "#f0f7f2";
-
-      notice.style.color = isError
-        ? "#b42318"
-        : "#18794e";
-    }
-
-    // =====================================
-    // ROLE BUTTONS
-    // =====================================
-
-    studentRole.addEventListener("click", () => {
-      selectedRole = "student";
-      updateScreen();
-    });
-
-    teacherRole.addEventListener("click", () => {
-      selectedRole = "teacher";
-      updateScreen();
-    });
-
-    // =====================================
-    // SWITCH SIGN IN / SIGN UP
-    // =====================================
-
-    toggleMode.addEventListener("click", () => {
-      isSignUp = !isSignUp;
-      updateScreen();
-    });
-
-    // =====================================
-    // ACCOUNT FORM
-    // =====================================
-
-    authForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const userEmail = email.value.trim();
-      const userPassword = password.value;
-      const userName = displayName.value.trim();
-
-      submitButton.disabled = true;
-      submitButton.textContent = "Please wait...";
-
-      try {
-        if (isSignUp) {
-
-          if (!userName) {
-            throw new Error("Please enter your name.");
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: userEmail,
+          password: userPassword,
+          options: {
+            data: {
+              display_name: userName,
+              requested_role: "student"
+            }
           }
+        });
 
-          const { data, error } =
-            await supabaseClient.auth.signUp({
-              email: userEmail,
-              password: userPassword,
+        if (error) throw error;
 
-              options: {
-                data: {
-                  display_name: userName,
-                  requested_role: selectedRole
-                }
-              }
-            });
-
-          if (error) throw error;
-
-          if (selectedRole === "teacher") {
-            showNotice(
-              "Your account was created. Teacher access is not enabled yet and requires approval. Please wait for the approval process before using the teacher workspace."
-            );
-
-          } else if (data.session) {
-            showNotice(
-              "Your student account was created successfully!"
-            );
-
-          } else {
-            showNotice(
-              "Your account was created! Please check your email to confirm your email address."
-            );
-          }
-
-        } else {
-
-          const { data, error } =
-            await supabaseClient.auth.signInWithPassword({
-              email: userEmail,
-              password: userPassword
-            });
-
-          if (error) throw error;
-
+        if (data.session && data.user) {
           const { data: profile, error: profileError } =
             await supabaseClient
               .from("profiles")
@@ -965,70 +954,446 @@
               .eq("id", data.user.id)
               .single();
 
-          if (profileError) {
-            await supabaseClient.auth.signOut();
-            throw profileError;
+          if (profileError) throw profileError;
+
+          if (profile.role !== "student") {
+            throw new Error("This account does not have student access.");
           }
 
-          if (
-            selectedRole === "teacher" &&
-            profile.role !== "teacher"
-          ) {
-            await supabaseClient.auth.signOut();
-
-            throw new Error(
-              "Teacher access has not been approved for this account."
-            );
-          }
-
-          if (
-            selectedRole === "student" &&
-            profile.role !== "student"
-          ) {
-            await supabaseClient.auth.signOut();
-
-            throw new Error(
-              "This account is not registered as a student account."
-            );
-          }
-
+          showStudentDashboard(data.user, profile);
+        } else {
           showNotice(
-            "Welcome back, " + profile.display_name + "!"
+            "Your account was created! Please check your email to confirm it, then sign in."
+          );
+        }
+      } else {
+        const { data, error } =
+          await supabaseClient.auth.signInWithPassword({
+            email: userEmail,
+            password: userPassword
+          });
+
+        if (error) throw error;
+
+        const { data: profile, error: profileError } =
+          await supabaseClient
+            .from("profiles")
+            .select("display_name, role")
+            .eq("id", data.user.id)
+            .single();
+
+        if (profileError) throw profileError;
+
+        if (profile.role !== "student") {
+          await supabaseClient.auth.signOut();
+          throw new Error(
+            "This account does not have approved student access."
           );
         }
 
-      } catch (error) {
-        showNotice(error.message, true);
-
-      } finally {
-        submitButton.disabled = false;
-        updateScreen();
+        showStudentDashboard(data.user, profile);
       }
+    } catch (error) {
+      showNotice(error.message || "Something went wrong.", true);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = isSignUp ? "Create account" : "Sign in";
+    }
+  });
+}
+
+/* =================================
+   DASHBOARD NAVIGATION
+   ================================= */
+
+const pageIds = {
+  dashboard: "dashboardPage",
+  tasks: "tasksPage",
+  notes: "notesPage",
+  awards: "awardsPage"
+};
+
+document.querySelectorAll(".nav-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    const selectedPage = button.dataset.page;
+
+    document.querySelectorAll(".dashboard-page").forEach((page) => {
+      page.hidden = true;
     });
 
-    // =====================================
-    // INITIAL SCREEN
-    // =====================================
+    const pageToShow = document.getElementById(pageIds[selectedPage]);
 
-    updateScreen();
+    if (pageToShow) {
+      pageToShow.hidden = false;
+    }
 
-    // =====================================
-    // CONNECTION TEST
-    // =====================================
+    document.querySelectorAll(".nav-button").forEach((navButton) => {
+      navButton.classList.remove("active");
+    });
 
-    supabaseClient.auth.getSession().then(({ error }) => {
+    button.classList.add("active");
+  });
+});
+
+/* =================================
+   TASK DISPLAY
+   ================================= */
+
+function createTaskElement(task, showCheckbox = true) {
+  const item = document.createElement("div");
+  item.className = "task-item";
+
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = "12px";
+
+  if (showCheckbox) {
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = task.completed;
+    checkbox.setAttribute("aria-label", `Complete ${task.title}`);
+
+    checkbox.addEventListener("change", async () => {
+      checkbox.disabled = true;
+
+      const { error } = await supabaseClient
+        .from("tasks")
+        .update({ completed: checkbox.checked })
+        .eq("id", task.id)
+        .eq("owner_id", currentUser.id);
+
       if (error) {
-        console.error(
-          "Supabase connection test failed:",
-          error.message
-        );
-      } else {
-        console.log(
-          "Supabase connection test passed!"
-        );
+        checkbox.checked = !checkbox.checked;
+        checkbox.disabled = false;
+        alert("Your task could not be updated. Please try again.");
+        return;
       }
+
+      await loadStudentData();
     });
-  </script>
+
+    row.appendChild(checkbox);
+  }
+
+  const title = document.createElement("span");
+  title.textContent = task.title;
+  title.style.flex = "1";
+
+  if (task.completed) {
+    title.style.textDecoration = "line-through";
+    title.style.opacity = "0.6";
+  }
+
+  row.appendChild(title);
+
+  const category = document.createElement("small");
+  category.textContent = task.category || "Task";
+  category.style.color = "#71816D";
+
+  item.appendChild(row);
+  item.appendChild(category);
+
+  return item;
+}
+
+/* =================================
+   LOAD STUDENT DATA
+   ================================= */
+
+async function loadStudentData() {
+  if (!currentUser) return;
+
+  const priorityList = document.getElementById("priorityList");
+  const allTasksList = document.getElementById("allTasksList");
+
+  if (priorityList) priorityList.textContent = "Loading your tasks...";
+  if (allTasksList) allTasksList.textContent = "Loading your tasks...";
+
+  const { data: tasks, error: taskError } = await supabaseClient
+    .from("tasks")
+    .select("id, title, category, completed, created_at")
+    .eq("owner_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (taskError) {
+    if (priorityList) {
+      priorityList.textContent = "Could not load tasks. Please refresh.";
+    }
+
+    if (allTasksList) {
+      allTasksList.textContent = "Could not load tasks. Please refresh.";
+    }
+
+    console.error("Task loading error:", taskError);
+    return;
+  }
+
+  cachedTasks = tasks || [];
+
+  const unfinished = cachedTasks.filter((task) => !task.completed);
+  const completed = cachedTasks.filter((task) => task.completed);
+
+  const tasksToDo = document.getElementById("tasksToDo");
+  const tasksCompleted = document.getElementById("tasksCompleted");
+
+  if (tasksToDo) tasksToDo.textContent = unfinished.length;
+  if (tasksCompleted) tasksCompleted.textContent = completed.length;
+
+  if (priorityList) {
+    priorityList.replaceChildren();
+
+    const priorities = unfinished.filter(
+      (task) => task.category === "Must Do Today"
+    );
+
+    if (priorities.length === 0) {
+      priorityList.textContent = "You're all caught up on today's priorities! 🌱";
+    } else {
+      priorities.forEach((task) => {
+        priorityList.appendChild(createTaskElement(task));
+      });
+    }
+  }
+
+  if (allTasksList) {
+    allTasksList.replaceChildren();
+
+    if (cachedTasks.length === 0) {
+      allTasksList.textContent = "No tasks yet. Add your first task above!";
+    } else {
+      cachedTasks.forEach((task) => {
+        allTasksList.appendChild(createTaskElement(task));
+      });
+    }
+  }
+
+  await loadAwards();
+  await loadMaterials();
+}
+
+/* =================================
+   ADD A TASK
+   ================================= */
+
+const taskForm = document.getElementById("taskForm");
+
+if (taskForm) {
+  taskForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!currentUser) return;
+
+    const titleInput = document.getElementById("taskTitle");
+    const categoryInput = document.getElementById("taskCategory");
+    const addButton = taskForm.querySelector('button[type="submit"]');
+
+    const title = titleInput.value.trim();
+
+    if (!title) return;
+
+    addButton.disabled = true;
+
+    const { error } = await supabaseClient
+      .from("tasks")
+      .insert({
+        owner_id: currentUser.id,
+        title: title,
+        category: categoryInput.value,
+        completed: false
+      });
+
+    addButton.disabled = false;
+
+    if (error) {
+      alert("Your task could not be saved. Please try again.");
+      console.error("Task saving error:", error);
+      return;
+    }
+
+    titleInput.value = "";
+    await loadStudentData();
+  });
+}
+
+/* =================================
+   LOAD AWARDS
+   ================================= */
+
+async function loadAwards() {
+  if (!currentUser) return;
+
+  const awardsList = document.getElementById("awardsList");
+  const awardPoints = document.getElementById("awardPoints");
+
+  const { data, error } = await supabaseClient
+    .from("awards")
+    .select("points, reason, created_at")
+    .eq("student_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (awardsList) awardsList.textContent = "Awards could not be loaded.";
+    console.error("Awards loading error:", error);
+    return;
+  }
+
+  const awards = data || [];
+  const totalPoints = awards.reduce(
+    (total, award) => total + award.points,
+    0
+  );
+
+  if (awardPoints) awardPoints.textContent = totalPoints;
+
+  if (awardsList) {
+    awardsList.replaceChildren();
+
+    if (awards.length === 0) {
+      awardsList.textContent = "Your achievements will appear here!";
+    } else {
+      awards.forEach((award) => {
+        const item = document.createElement("div");
+        item.className = "task-item";
+
+        const reason = document.createElement("strong");
+        reason.textContent = award.reason;
+
+        const points = document.createElement("p");
+        points.textContent = `+${award.points} points`;
+
+        item.append(reason, points);
+        awardsList.appendChild(item);
+      });
+    }
+  }
+}
+
+/* =================================
+   LOAD LEARNING MATERIALS
+   ================================= */
+
+async function loadMaterials() {
+  if (!currentUser) return;
+
+  const notesList = document.getElementById("notesList");
+
+  const { data, error } = await supabaseClient
+    .from("materials")
+    .select("subject, chapter, topic, material_type, notes_content")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (notesList) {
+      notesList.textContent = "Learning materials could not be loaded.";
+    }
+
+    console.error("Materials loading error:", error);
+    return;
+  }
+
+  if (!notesList) return;
+
+  notesList.replaceChildren();
+
+  if (!data || data.length === 0) {
+    notesList.textContent = "No learning materials have been shared yet.";
+    return;
+  }
+
+  data.forEach((material) => {
+    const item = document.createElement("div");
+    item.className = "task-item";
+
+    const subject = document.createElement("strong");
+    subject.textContent = material.subject;
+
+    const topic = document.createElement("p");
+    topic.textContent = material.topic || material.chapter || material.material_type;
+
+    item.append(subject, topic);
+
+    if (material.notes_content) {
+      const notes = document.createElement("p");
+      notes.textContent = material.notes_content;
+      item.appendChild(notes);
+    }
+
+    notesList.appendChild(item);
+  });
+}
+
+/* =================================
+   SIGN OUT
+   ================================= */
+
+const signOutButton = document.getElementById("signOutButton");
+
+if (signOutButton) {
+  signOutButton.addEventListener("click", async () => {
+    signOutButton.disabled = true;
+
+    const { error } = await supabaseClient.auth.signOut();
+
+    signOutButton.disabled = false;
+
+    if (error) {
+      alert("Could not sign out. Please try again.");
+      console.error("Sign-out error:", error);
+      return;
+    }
+
+    showLoginPage();
+    hideNotice();
+    authForm.reset();
+
+    isSignUp = false;
+    selectedRole = "student";
+    updateScreen();
+  });
+}
+
+/* =================================
+   RESTORE SAVED LOGIN SESSION
+   ================================= */
+
+async function restoreSession() {
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    console.error("Session error:", error);
+    return;
+  }
+
+  if (!data.session) return;
+
+  const user = data.session.user;
+
+  const { data: profile, error: profileError } =
+    await supabaseClient
+      .from("profiles")
+      .select("display_name, role")
+      .eq("id", user.id)
+      .single();
+
+  if (profileError || !profile || profile.role !== "student") {
+    await supabaseClient.auth.signOut();
+    showLoginPage();
+    return;
+  }
+
+  showStudentDashboard(user, profile);
+}
+
+/* =================================
+   START THE APP
+   ================================= */
+
+showLoginPage();
+updateScreen();
+restoreSession();
+
+</script>
 
 </body>
 </html>

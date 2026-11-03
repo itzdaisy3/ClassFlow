@@ -663,6 +663,9 @@
       <button class="nav-button" data-page="tasks">
         ✓ My Tasks
       </button>
+      <button class="nav-button" data-page="checklists">
+  📋 Reusable Checklists
+</button>
       <button class="nav-button" data-page="notes">
         📚 Digital Notes
       </button>
@@ -745,6 +748,33 @@
       <p>Celebrate your achievements!</p>
       <div id="awardsList">Loading your awards...</div>
     </section>
+
+    <section id="checklistsPage" class="dashboard-page" hidden>
+  <h2>Reusable Checklists 📋</h2>
+  <p>Create checklists for things you do regularly and reuse them whenever you need.</p>
+
+  <form id="checklistForm" class="task-form">
+    <input
+      id="checklistTitle"
+      type="text"
+      placeholder="Checklist name (e.g. Exam preparation)"
+      required
+    >
+
+    <textarea
+      id="checklistItems"
+      placeholder="Write one item per line..."
+      rows="5"
+      required
+    ></textarea>
+
+    <button type="submit">Save checklist</button>
+  </form>
+
+  <div id="checklistsList">
+    Your saved checklists will appear here.
+  </div>
+</section>
 
   </div>
 </section>
@@ -1009,10 +1039,11 @@ if (authForm) {
 const pageIds = {
   dashboard: "dashboardPage",
   tasks: "tasksPage",
+  checklists: "checklistsPage",
   notes: "notesPage",
   awards: "awardsPage"
 };
-
+    
 document.querySelectorAll(".nav-button").forEach((button) => {
   button.addEventListener("click", () => {
     const selectedPage = button.dataset.page;
@@ -1170,6 +1201,7 @@ async function loadStudentData() {
 
   await loadAwards();
   await loadMaterials();
+  await loadChecklists();
 }
 
 /* =================================
@@ -1323,7 +1355,210 @@ async function loadMaterials() {
   });
 }
 
-/* =================================
+/* ======================/* =================================
+   REUSABLE CHECKLISTS
+   ================================= */
+
+const checklistForm = document.getElementById("checklistForm");
+
+async function loadChecklists() {
+  if (!currentUser) return;
+
+  const list = document.getElementById("checklistsList");
+  if (!list) return;
+
+  list.textContent = "Loading your checklists...";
+
+  const { data, error } = await supabaseClient
+    .from("reusable_checklists")
+    .select("id, title, items, created_at")
+    .eq("owner_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "Could not load your checklists. Please try again.";
+    console.error("Checklist loading error:", error);
+    return;
+  }
+
+  list.replaceChildren();
+
+  if (!data || data.length === 0) {
+    list.textContent = "You haven't saved any checklists yet. Create your first one above!";
+    return;
+  }
+
+  data.forEach((checklist) => {
+    const card = document.createElement("div");
+    card.className = "task-item";
+
+    const heading = document.createElement("h3");
+    heading.textContent = checklist.title;
+
+    const itemsContainer = document.createElement("div");
+    itemsContainer.style.display = "grid";
+    itemsContainer.style.gap = "10px";
+    itemsContainer.style.margin = "15px 0";
+
+    const items = Array.isArray(checklist.items) ? checklist.items : [];
+
+    items.forEach((checklistItem, index) => {
+      const label = document.createElement("label");
+      label.style.display = "flex";
+      label.style.alignItems = "center";
+      label.style.gap = "10px";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(checklistItem.done);
+
+      const itemText = document.createElement("span");
+      itemText.textContent = checklistItem.text || "";
+      if (checkbox.checked) {
+        itemText.style.textDecoration = "line-through";
+        itemText.style.opacity = "0.6";
+      }
+
+      checkbox.addEventListener("change", async () => {
+        checkbox.disabled = true;
+
+        const updatedItems = items.map((item, itemIndex) => ({
+          ...item,
+          done: itemIndex === index ? checkbox.checked : Boolean(item.done)
+        }));
+
+        const { error: updateError } = await supabaseClient
+          .from("reusable_checklists")
+          .update({ items: updatedItems })
+          .eq("id", checklist.id)
+          .eq("owner_id", currentUser.id);
+
+        if (updateError) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.disabled = false;
+          alert("Couldn't update that checklist item. Please try again.");
+          console.error("Checklist update error:", updateError);
+          return;
+        }
+
+        await loadChecklists();
+      });
+
+      label.append(checkbox, itemText);
+      itemsContainer.appendChild(label);
+    });
+
+    const resetButton = document.createElement("button");
+    resetButton.type = "button";
+    resetButton.textContent = "Reset checklist";
+    resetButton.className = "task-form-button";
+
+    resetButton.addEventListener("click", async () => {
+      resetButton.disabled = true;
+
+      const resetItems = items.map((item) => ({
+        ...item,
+        done: false
+      }));
+
+      const { error: resetError } = await supabaseClient
+        .from("reusable_checklists")
+        .update({ items: resetItems })
+        .eq("id", checklist.id)
+        .eq("owner_id", currentUser.id);
+
+      if (resetError) {
+        resetButton.disabled = false;
+        alert("Couldn't reset the checklist. Please try again.");
+        console.error("Checklist reset error:", resetError);
+        return;
+      }
+
+      await loadChecklists();
+    });
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete checklist";
+    deleteButton.style.marginLeft = "8px";
+
+    deleteButton.addEventListener("click", async () => {
+      if (!confirm(`Delete "${checklist.title}"?`)) return;
+
+      deleteButton.disabled = true;
+
+      const { error: deleteError } = await supabaseClient
+        .from("reusable_checklists")
+        .delete()
+        .eq("id", checklist.id)
+        .eq("owner_id", currentUser.id);
+
+      if (deleteError) {
+        deleteButton.disabled = false;
+        alert("Couldn't delete the checklist. Please try again.");
+        console.error("Checklist delete error:", deleteError);
+        return;
+      }
+
+      await loadChecklists();
+    });
+
+    card.append(heading, itemsContainer, resetButton, deleteButton);
+    list.appendChild(card);
+  });
+}
+
+if (checklistForm) {
+  checklistForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!currentUser) {
+      alert("Please sign in first.");
+      return;
+    }
+
+    const titleInput = document.getElementById("checklistTitle");
+    const itemsInput = document.getElementById("checklistItems");
+    const saveButton = checklistForm.querySelector('button[type="submit"]');
+
+    const title = titleInput.value.trim();
+    const itemTexts = itemsInput.value
+      .split("\n")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+
+    if (!title || itemTexts.length === 0) {
+      alert("Please enter a checklist name and at least one item.");
+      return;
+    }
+
+    const items = itemTexts.map((text) => ({
+      text,
+      done: false
+    }));
+
+    saveButton.disabled = true;
+
+    const { error } = await supabaseClient
+      .from("reusable_checklists")
+      .insert({
+        owner_id: currentUser.id,
+        title,
+        items
+      });
+
+    saveButton.disabled = false;
+
+    if (error) {
+      alert("Your checklist couldn't be saved. Please try again.");
+      console.error("Checklist saving error:", error);
+      return;
+    }
+
+    checklistForm.reset();
+    await loadChecklists();
+  });
+}===========
    SIGN OUT
    ================================= */
 

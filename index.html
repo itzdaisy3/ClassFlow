@@ -1,22 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudentFlow | Learning made easier</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    :root {
-      --green: #65a94f;
-      --green-light: #e4f5dc;
-      --bg: #f5faf1;
-      --forest: #29452d;
-      --muted: #71816d;
-      --border: #d8e9d0;
-      --white: #ffffff;
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -25,234 +17,368 @@
 
     body {
       min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(circle at top left, #e4f5dc 0, transparent 35%),
-        var(--bg);
-      color: var(--forest);
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6fb;
+      color: #20243a;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      flex-direction: column;
     }
 
-    .container {
+    header {
       width: 100%;
-      max-width: 1050px;
-      display: grid;
-      grid-template-columns: 1fr 430px;
-      gap: 48px;
+      padding: 24px 7%;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
     }
 
     .brand {
-      font-size: 24px;
+      font-size: 25px;
       font-weight: 800;
-      margin-bottom: 60px;
+      color: #6256d9;
+      letter-spacing: -1px;
     }
 
-    .brand span {
-      color: var(--green);
+    .header-label {
+      font-size: 13px;
+      color: #777b91;
+      font-weight: 600;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 430px;
+      gap: 60px;
+      align-items: center;
+      width: min(1100px, 90%);
+      margin: 30px auto 60px;
+    }
+
+    .intro {
+      padding: 20px 0;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      background: #e9e7ff;
+      color: #6256d9;
+      padding: 9px 15px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 25px;
     }
 
     .intro h1 {
-      font-size: clamp(36px, 5vw, 58px);
-      line-height: 1.08;
-      margin-bottom: 20px;
+      font-size: clamp(38px, 5vw, 58px);
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 22px;
+      max-width: 570px;
     }
 
-    .intro p {
-      color: var(--muted);
+    .intro h1 span {
+      color: #6256d9;
+    }
+
+    .intro > p {
+      color: #73778d;
       font-size: 17px;
       line-height: 1.7;
-      max-width: 470px;
+      max-width: 520px;
+      margin-bottom: 30px;
     }
 
     .features {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 28px;
+      display: grid;
+      gap: 15px;
     }
 
     .feature {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 10px 14px;
-      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      color: #454960;
+      font-size: 15px;
+      font-weight: 600;
     }
 
-    .card {
-      background: var(--white);
-      border: 1px solid var(--border);
+    .feature-icon {
+      width: 37px;
+      height: 37px;
+      display: grid;
+      place-items: center;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px #24264a0d;
+      font-size: 18px;
+    }
+
+    .auth-card {
+      background: white;
+      padding: 35px;
       border-radius: 24px;
-      padding: 30px;
-      box-shadow: 0 15px 45px #29452d10;
+      box-shadow: 0 18px 55px #282c5012;
+      width: 100%;
     }
 
-    .card h2 {
-      font-size: 25px;
-      margin-bottom: 8px;
+    .role-label {
+      font-size: 12px;
+      color: #85899d;
+      font-weight: 700;
+      margin-bottom: 10px;
     }
 
-    .subtitle {
-      color: var(--muted);
-      font-size: 14px;
-      margin-bottom: 24px;
-      line-height: 1.5;
-    }
-
-    .role-switch {
+    .role-selector {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      background: var(--bg);
-      border-radius: 12px;
-      padding: 5px;
-      margin-bottom: 24px;
+      gap: 9px;
+      margin-bottom: 27px;
     }
 
     .role-button {
-      border: 0;
-      background: transparent;
-      padding: 12px;
-      border-radius: 9px;
-      color: var(--muted);
-      font-weight: 700;
+      border: 1px solid #e5e6ef;
+      background: white;
+      padding: 13px 10px;
+      border-radius: 12px;
       cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      color: #666b80;
+      transition: 0.2s;
     }
 
     .role-button.active {
-      background: var(--white);
-      color: var(--forest);
-      box-shadow: 0 2px 8px #29452d12;
+      background: #efedff;
+      color: #6256d9;
+      border-color: #8b80ec;
+    }
+
+    .form-heading {
+      margin-bottom: 23px;
+    }
+
+    .form-heading h2 {
+      font-size: 25px;
+      margin-bottom: 8px;
+      letter-spacing: -0.7px;
+    }
+
+    .form-heading p {
+      font-size: 13px;
+      color: #85899d;
+      line-height: 1.5;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     label {
-      display: block;
       font-size: 13px;
       font-weight: 700;
-      margin: 15px 0 7px;
+      color: #454960;
+      margin-top: 7px;
     }
 
     input {
       width: 100%;
-      padding: 13px 14px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      border: 1px solid #e3e5ed;
+      background: #fbfbfd;
+      border-radius: 11px;
+      padding: 14px;
       font-size: 14px;
       outline: none;
+      transition: 0.2s;
     }
 
     input:focus {
-      border-color: var(--green);
-      box-shadow: 0 0 0 3px #65a94f20;
+      border-color: #8175e7;
+      box-shadow: 0 0 0 3px #8175e71c;
     }
 
     .main-button {
-      width: 100%;
-      margin-top: 22px;
-      padding: 14px;
-      border: 0;
-      border-radius: 10px;
-      background: var(--green);
+      border: none;
+      background: #6256d9;
       color: white;
-      font-weight: 700;
+      padding: 15px;
+      border-radius: 11px;
       font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
+      margin-top: 15px;
+      transition: 0.2s;
     }
 
     .main-button:hover {
-      background: #559440;
+      background: #5145c5;
+      transform: translateY(-1px);
     }
 
-    .toggle-text {
+    .main-button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+      transform: none;
+    }
+
+    .switch-text {
       text-align: center;
-      color: var(--muted);
+      margin-top: 22px;
       font-size: 13px;
-      margin-top: 20px;
+      color: #85899d;
     }
 
-    .toggle-text button {
-      border: 0;
+    .switch-text button {
+      border: none;
       background: none;
-      color: var(--green);
+      color: #6256d9;
       font-weight: 700;
       cursor: pointer;
+      margin-left: 4px;
+      font-size: 13px;
     }
 
-    .notice {
+    #notice {
       display: none;
-      margin-top: 15px;
       padding: 12px;
-      background: var(--green-light);
-      color: var(--forest);
       border-radius: 10px;
+      background: #f0f7f2;
+      color: #18794e;
       font-size: 13px;
       line-height: 1.5;
+      margin-top: 16px;
+      overflow-wrap: anywhere;
     }
 
-    .footer {
-      margin-top: 22px;
-      color: var(--muted);
+    footer {
       text-align: center;
-      font-size: 11px;
+      color: #9699a9;
+      font-size: 12px;
+      padding: 20px;
     }
 
-    @media (max-width: 800px) {
-      .container {
+    @media (max-width: 850px) {
+      main {
         grid-template-columns: 1fr;
-        max-width: 500px;
-        gap: 28px;
+        gap: 30px;
+        max-width: 480px;
+        margin-top: 15px;
       }
 
-      .brand {
-        margin-bottom: 25px;
+      .intro {
+        text-align: center;
+      }
+
+      .intro > p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .features {
+        text-align: left;
+        width: fit-content;
+        margin: auto;
       }
 
       .intro h1 {
-        font-size: 38px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 20px 5%;
+      }
+
+      main {
+        width: 92%;
+      }
+
+      .auth-card {
+        padding: 25px 20px;
+      }
+
+      .header-label {
+        font-size: 11px;
       }
     }
   </style>
 </head>
 
 <body>
-  <main class="container">
-    <section class="intro">
-      <div class="brand" id="brandName">StudentFlow</div>
 
-      <h1>Make learning<br />feel more organized.</h1>
+  <header>
+    <div class="brand" id="brandName">StudentFlow</div>
+    <div class="header-label">LEARNING MADE EASIER</div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div class="eyebrow">A smarter way to stay organized</div>
+
+      <h1>
+        Make school life
+        <span>simpler.</span>
+      </h1>
 
       <p>
-        A calmer place for students to manage tasks, access learning materials,
-        and keep track of their progress.
+        A space designed to help students stay organized
+        and teachers manage their classrooms with less stress.
       </p>
 
       <div class="features">
-        <div class="feature">✓ Organize tasks</div>
-        <div class="feature">✓ Learning materials</div>
-        <div class="feature">✓ Track progress</div>
+        <div class="feature">
+          <div class="feature-icon">📚</div>
+          <span>Keep schoolwork organized</span>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">✓</div>
+          <span>Track tasks and progress</span>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">✨</div>
+          <span>Make learning easier</span>
+        </div>
       </div>
     </section>
 
-    <section class="card">
-      <h2 id="formTitle">Welcome back!</h2>
-      <p class="subtitle" id="formSubtitle">
-        Sign in to continue to your learning space.
-      </p>
+    <section class="auth-card">
 
-      <div class="role-switch">
-        <button class="role-button active" id="studentRole" type="button">
-          Student
+      <p class="role-label">CHOOSE YOUR WORKSPACE</p>
+
+      <div class="role-selector">
+        <button
+          type="button"
+          class="role-button active"
+          id="studentRole"
+        >
+          🎓 Student
         </button>
-        <button class="role-button" id="teacherRole" type="button">
-          Teacher
+
+        <button
+          type="button"
+          class="role-button"
+          id="teacherRole"
+        >
+          👩‍🏫 Teacher
         </button>
       </div>
 
+      <div class="form-heading">
+        <h2 id="formTitle">Welcome back!</h2>
+        <p id="formSubtitle">
+          Sign in to your StudentFlow space.
+        </p>
+      </div>
+
       <form id="authForm">
+
         <div id="nameField" style="display: none;">
           <label for="displayName">Your name</label>
           <input
@@ -260,7 +386,7 @@
             type="text"
             placeholder="Enter your name"
             autocomplete="name"
-          />
+          >
         </div>
 
         <label for="email">Email address</label>
@@ -270,7 +396,7 @@
           placeholder="you@example.com"
           autocomplete="email"
           required
-        />
+        >
 
         <label for="password">Password</label>
         <input
@@ -279,148 +405,307 @@
           placeholder="Enter your password"
           autocomplete="current-password"
           required
-        />
+          minlength="6"
+        >
 
         <button class="main-button" id="submitButton" type="submit">
           Sign in
         </button>
+
       </form>
 
-      <div class="notice" id="notice">
-        This is the welcome-screen prototype. Supabase authentication will be
-        connected in the next step.
-      </div>
+      <div id="notice" role="status" aria-live="polite"></div>
 
-      <p class="toggle-text">
+      <div class="switch-text">
         <span id="togglePrompt">New here?</span>
-        <button id="toggleMode" type="button">Create an account</button>
-      </p>
-
-      <div class="footer">
-        StudentFlow · A learning workspace prototype
+        <button type="button" id="toggleMode">
+          Create an account
+        </button>
       </div>
+
     </section>
   </main>
 
+  <footer>
+    StudentFlow & TeachersFlow · Prototype
+  </footer>
 
-<script>
-  // App settings
-  let selectedRole = "student";
-  let isSignUp = false;
+  <script>
+    // =====================================
+    // SUPABASE CONNECTION
+    // =====================================
 
-  // Supabase connection
-  const SUPABASE_URL = "https://zfgyxnjxqemgugbahiys.supabase.co/rest/v1/";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i";
+    const SUPABASE_URL = "https://zfgyxnjxqemgugbahiys.supabase.co/rest/v1/";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BxLHE_-u_FcjwBjErUeHyA_rAKm5K8i";
 
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
-
-  // Test Supabase connection
-  supabaseClient.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      console.error("Supabase connection test failed:", error.message);
-    } else {
-      console.log("Supabase connection test passed!");
-    }
-  });
-
-  // Page elements
-  const studentRole = document.getElementById("studentRole");
-  const brandName = document.getElementById("brandName");
-  const teacherRole = document.getElementById("teacherRole");
-  const formTitle = document.getElementById("formTitle");
-  const formSubtitle = document.getElementById("formSubtitle");
-  const nameField = document.getElementById("nameField");
-  const submitButton = document.getElementById("submitButton");
-  const togglePrompt = document.getElementById("togglePrompt");
-  const toggleMode = document.getElementById("toggleMode");
-  const notice = document.getElementById("notice");
-  const authForm = document.getElementById("authForm");
-
-  // Update the screen
-  function updateScreen() {
-    const appName =
-      selectedRole === "student" ? "StudentFlow" : "TeachersFlow";
-
-    brandName.textContent = appName;
-    document.title = appName + " | Learning made easier";
-
-    studentRole.classList.toggle(
-      "active",
-      selectedRole === "student"
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
     );
 
-    teacherRole.classList.toggle(
-      "active",
-      selectedRole === "teacher"
-    );
+    // =====================================
+    // APP SETTINGS
+    // =====================================
 
-    nameField.style.display = isSignUp ? "block" : "none";
+    let selectedRole = "student";
+    let isSignUp = false;
 
-    if (isSignUp) {
-      formTitle.textContent = "Create your account";
+    // =====================================
+    // PAGE ELEMENTS
+    // =====================================
 
-      formSubtitle.textContent =
+    const studentRole = document.getElementById("studentRole");
+    const teacherRole = document.getElementById("teacherRole");
+    const brandName = document.getElementById("brandName");
+
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+
+    const nameField = document.getElementById("nameField");
+    const displayName = document.getElementById("displayName");
+
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+
+    const submitButton = document.getElementById("submitButton");
+    const togglePrompt = document.getElementById("togglePrompt");
+    const toggleMode = document.getElementById("toggleMode");
+
+    const notice = document.getElementById("notice");
+    const authForm = document.getElementById("authForm");
+
+    // =====================================
+    // UPDATE THE SCREEN
+    // =====================================
+
+    function updateScreen() {
+      const appName =
         selectedRole === "student"
-          ? "Join StudentFlow and organize your learning."
-          : "Request a TeachersFlow account.";
+          ? "StudentFlow"
+          : "TeachersFlow";
 
-      submitButton.textContent = "Create account";
-      togglePrompt.textContent = "Already have an account?";
-      toggleMode.textContent = "Sign in";
+      brandName.textContent = appName;
+      document.title = appName + " | Learning made easier";
 
-    } else {
-      formTitle.textContent =
+      studentRole.classList.toggle(
+        "active",
         selectedRole === "student"
-          ? "Welcome back!"
-          : "Welcome, teacher!";
+      );
 
-      formSubtitle.textContent =
-        selectedRole === "student"
-          ? "Sign in to your StudentFlow space."
-          : "Sign in to your TeachersFlow workspace.";
+      teacherRole.classList.toggle(
+        "active",
+        selectedRole === "teacher"
+      );
 
-      submitButton.textContent = "Sign in";
-      togglePrompt.textContent = "New here?";
-      toggleMode.textContent = "Create an account";
+      nameField.style.display = isSignUp ? "block" : "none";
+      displayName.required = isSignUp;
+
+      if (isSignUp) {
+        formTitle.textContent = "Create your account";
+
+        formSubtitle.textContent =
+          selectedRole === "student"
+            ? "Join StudentFlow and organize your learning."
+            : "Create an account and request teacher access.";
+
+        submitButton.textContent = "Create account";
+        togglePrompt.textContent = "Already have an account?";
+        toggleMode.textContent = "Sign in";
+        password.autocomplete = "new-password";
+
+      } else {
+        formTitle.textContent =
+          selectedRole === "student"
+            ? "Welcome back!"
+            : "Welcome, teacher!";
+
+        formSubtitle.textContent =
+          selectedRole === "student"
+            ? "Sign in to your StudentFlow space."
+            : "Sign in to your TeachersFlow workspace.";
+
+        submitButton.textContent = "Sign in";
+        togglePrompt.textContent = "New here?";
+        toggleMode.textContent = "Create an account";
+        password.autocomplete = "current-password";
+      }
+
+      notice.style.display = "none";
     }
 
-    notice.style.display = "none";
-  }
+    // =====================================
+    // SHOW A MESSAGE
+    // =====================================
 
-  // Student role button
-  studentRole.addEventListener("click", () => {
-    selectedRole = "student";
+    function showNotice(message, isError = false) {
+      notice.textContent = message;
+      notice.style.display = "block";
+
+      notice.style.background = isError
+        ? "#fff0ef"
+        : "#f0f7f2";
+
+      notice.style.color = isError
+        ? "#b42318"
+        : "#18794e";
+    }
+
+    // =====================================
+    // ROLE BUTTONS
+    // =====================================
+
+    studentRole.addEventListener("click", () => {
+      selectedRole = "student";
+      updateScreen();
+    });
+
+    teacherRole.addEventListener("click", () => {
+      selectedRole = "teacher";
+      updateScreen();
+    });
+
+    // =====================================
+    // SWITCH SIGN IN / SIGN UP
+    // =====================================
+
+    toggleMode.addEventListener("click", () => {
+      isSignUp = !isSignUp;
+      updateScreen();
+    });
+
+    // =====================================
+    // ACCOUNT FORM
+    // =====================================
+
+    authForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const userEmail = email.value.trim();
+      const userPassword = password.value;
+      const userName = displayName.value.trim();
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Please wait...";
+
+      try {
+        if (isSignUp) {
+
+          if (!userName) {
+            throw new Error("Please enter your name.");
+          }
+
+          const { data, error } =
+            await supabaseClient.auth.signUp({
+              email: userEmail,
+              password: userPassword,
+
+              options: {
+                data: {
+                  display_name: userName,
+                  requested_role: selectedRole
+                }
+              }
+            });
+
+          if (error) throw error;
+
+          if (selectedRole === "teacher") {
+            showNotice(
+              "Your account was created. Teacher access is not enabled yet and requires approval. Please wait for the approval process before using the teacher workspace."
+            );
+
+          } else if (data.session) {
+            showNotice(
+              "Your student account was created successfully!"
+            );
+
+          } else {
+            showNotice(
+              "Your account was created! Please check your email to confirm your email address."
+            );
+          }
+
+        } else {
+
+          const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+              email: userEmail,
+              password: userPassword
+            });
+
+          if (error) throw error;
+
+          const { data: profile, error: profileError } =
+            await supabaseClient
+              .from("profiles")
+              .select("display_name, role")
+              .eq("id", data.user.id)
+              .single();
+
+          if (profileError) {
+            await supabaseClient.auth.signOut();
+            throw profileError;
+          }
+
+          if (
+            selectedRole === "teacher" &&
+            profile.role !== "teacher"
+          ) {
+            await supabaseClient.auth.signOut();
+
+            throw new Error(
+              "Teacher access has not been approved for this account."
+            );
+          }
+
+          if (
+            selectedRole === "student" &&
+            profile.role !== "student"
+          ) {
+            await supabaseClient.auth.signOut();
+
+            throw new Error(
+              "This account is not registered as a student account."
+            );
+          }
+
+          showNotice(
+            "Welcome back, " + profile.display_name + "!"
+          );
+        }
+
+      } catch (error) {
+        showNotice(error.message, true);
+
+      } finally {
+        submitButton.disabled = false;
+        updateScreen();
+      }
+    });
+
+    // =====================================
+    // INITIAL SCREEN
+    // =====================================
+
     updateScreen();
-  });
 
-  // Teacher role button
-  teacherRole.addEventListener("click", () => {
-    selectedRole = "teacher";
-    updateScreen();
-  });
+    // =====================================
+    // CONNECTION TEST
+    // =====================================
 
-  // Switch between sign in and sign up
-  toggleMode.addEventListener("click", () => {
-    isSignUp = !isSignUp;
-    updateScreen();
-  });
-
-  // Account form
-  authForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    notice.textContent =
-      "This is currently a prototype. Real account creation and sign-in will be connected next.";
-
-    notice.style.display = "block";
-  });
-
-  // Set the initial screen
-  updateScreen();
-</script>
+    supabaseClient.auth.getSession().then(({ error }) => {
+      if (error) {
+        console.error(
+          "Supabase connection test failed:",
+          error.message
+        );
+      } else {
+        console.log(
+          "Supabase connection test passed!"
+        );
+      }
+    });
+  </script>
 
 </body>
 </html>

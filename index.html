@@ -1,496 +1,81 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudentFlow | TeachersFlow</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StudentFlow | Learn & Organize</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{
-  --bg:#F7F9F3;--surface:#FFFFFF;--sage:#E8F0E3;--sage2:#D8E5D1;
-  --sage3:#BFCFB7;--green:#617B5C;--green-dark:#435B40;
-  --text:#344536;--muted:#748174;--line:#E3EADF;--blue:#DCEFFA;
-  --shadow:0 8px 28px rgba(56,75,53,.07);--radius:18px
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-[hidden]{display:none!important}
-.auth-shell{min-height:100vh;background:#F1F7FB;display:grid;grid-template-columns:1fr minmax(300px,430px);gap:40px;align-items:center;padding:5vw 9vw}
-.auth-intro h1{font-size:clamp(38px,5vw,62px);line-height:1.05;margin:18px 0;color:#294761}
-.auth-intro h1 span{color:#5689B5}
-.auth-intro p{color:#657B8C;line-height:1.7;max-width:520px}
-.auth-card{background:white;padding:32px;border-radius:24px;box-shadow:var(--shadow)}
-.brand{font-weight:800;font-size:24px;color:#5689B5}
-.role-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
-.role-choice,.secondary{background:white;border:1px solid var(--line);padding:12px;border-radius:12px;color:var(--text);font-weight:700}
-.role-choice.active{background:var(--blue);border-color:#9BC5E2;color:#294761}
-.field{display:grid;gap:7px;margin:12px 0}
-.field label{font-size:13px;font-weight:700;color:#526453}
-input,select,textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#FCFDFB;color:var(--text)}
-textarea{resize:vertical}
-.primary{background:var(--green);color:white;border:0;border-radius:11px;padding:12px 17px;font-weight:700}
-.primary:hover{background:var(--green-dark)}
-.primary:disabled{opacity:.55;cursor:wait}
-.full{width:100%;margin-top:12px}
-.link-button{border:0;background:transparent;color:#5689B5;font-weight:700}
-.notice{margin-top:14px;padding:12px;border-radius:10px;background:#F0F5EC;color:var(--green-dark);font-size:13px;line-height:1.5}
-.app{min-height:100vh;display:flex}
-.sidebar{width:250px;background:#EEF3E9;padding:26px 18px;display:flex;flex-direction:column;gap:18px;flex-shrink:0}
-.sidebar h2{margin:0 0 8px;font-size:22px;color:var(--green-dark)}
-.sidebar .subbrand{font-size:11px;letter-spacing:1px;color:var(--muted);font-weight:700}
-.nav{display:grid;gap:7px}
-.nav button{border:0;text-align:left;padding:12px 13px;border-radius:11px;background:transparent;color:#586B55;font-weight:700}
-.nav button:hover,.nav button.active{background:#DCE8D5;color:#3F573C}
-.signout{margin-top:auto;border:1px solid var(--line);background:white;border-radius:11px;padding:12px;color:var(--green-dark);font-weight:700}
-.main{min-width:0;flex:1;padding:32px clamp(18px,4vw,54px)}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
-.topbar h1{font-size:27px;margin:0 0 6px}
-.topbar p{margin:0;color:var(--muted)}
-.page{display:none}.page.active{display:block}
-.welcome{background:#EDF3E8;border:1px solid #E2EBDD;padding:26px;border-radius:var(--radius);margin-bottom:20px}
-.welcome h2{margin:0 0 8px;font-size:22px}.welcome p{margin:0;color:#61745D;line-height:1.6}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
-.stat,.panel,.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:19px;box-shadow:var(--shadow)}
-.stat span{display:block;color:var(--muted);font-size:13px}.stat strong{display:block;font-size:29px;margin-top:9px;color:var(--green-dark)}
-.panel h2,.page h2{margin:0 0 12px}.page>p{color:var(--muted);margin:0 0 18px}
-.form-grid{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}
-.form-grid .field{margin:0}
-.stack{display:grid;gap:11px;margin-top:15px}
-.task,.list-row{background:white;border:1px solid var(--line);border-radius:13px;padding:14px;display:flex;gap:12px;align-items:center}
-.task .task-copy{flex:1;min-width:0}.task small{display:block;color:var(--muted);margin-top:5px}
-.task.done{opacity:.65}.task.done .task-title{text-decoration:line-through}
-.task input[type=checkbox],.check-item input{width:18px;height:18px;accent-color:var(--green)}
-.empty{padding:18px;text-align:center;background:#F1F6EE;border-radius:13px;color:#61745D;line-height:1.5}
-.side-toast{position:fixed;right:22px;bottom:22px;max-width:310px;background:#E7F0E1;color:#405A3D;border:1px solid #D4E3CD;padding:15px 18px;border-radius:15px;box-shadow:var(--shadow);z-index:20;font-weight:700}
-.inline-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.small-btn{border:1px solid var(--line);background:#F8FAF6;color:var(--green-dark);padding:8px 11px;border-radius:9px;font-weight:700}
-.danger{color:#9B4C48}
-.check-items{display:grid;gap:10px;margin:15px 0}
-.check-item{display:flex;align-items:center;gap:10px}
-.check-item span{flex:1}
-.check-item input{width:18px}
-.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
-.muted{color:var(--muted);font-size:13px}
-.table-wrap{overflow:auto}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line)}
-th{color:var(--muted);font-size:12px}
-.badge{display:inline-block;background:#EEF3E9;color:#50694B;padding:5px 8px;border-radius:20px;font-size:12px}
-@media(max-width:850px){.auth-shell{grid-template-columns:1fr;padding:25px;gap:20px}.auth-intro{text-align:center}.auth-intro p{margin:auto}.app{display:block}.sidebar{width:100%;min-height:auto}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.signout{margin-top:0}.main{padding:22px 16px}.stats{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}}
+:root{--bg:#FFFDF5;--surface:#fff;--sage:#A3B18A;--sage2:#DAD7CD;--sage3:#5C7650;--green:#3A5A40;--dark:#344E41;--text:#344536;--muted:#748174;--line:#e3e5dc;--blue:#F1F7FB;--blue2:#5689B5;--danger:#a64b4b;--shadow:0 12px 35px #34453612}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 16px;background:var(--green);color:white;font-weight:700}button:hover{filter:brightness(.96)}button.secondary{background:#edf0e8;color:var(--dark)}button.danger{background:#faeeee;color:var(--danger)}button.small{padding:7px 10px;font-size:13px}.hidden{display:none!important}.muted{color:var(--muted)}.tiny{font-size:12px}.wrap{max-width:1180px;margin:auto;padding:24px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:23px;letter-spacing:-.7px}.logo{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:var(--green);color:#fff}.auth-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,var(--blue),#fff 55%,#eef4e8)}.auth-card{width:min(100%,480px);background:#fff;border:1px solid #e4edf1;border-radius:26px;padding:30px;box-shadow:var(--shadow)}.auth-card h1{font-size:30px;line-height:1.1;margin:25px 0 8px}.auth-card p{color:var(--muted)}.field{display:grid;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:750}.field input,.field select,.field textarea,.inline-input{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 12px;color:var(--text);outline:none}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--sage3);box-shadow:0 0 0 3px #a3b18a30}.field textarea{min-height:95px;resize:vertical}.auth-tabs{display:flex;background:#f2f5f7;border-radius:13px;padding:4px;margin:18px 0}.auth-tabs button{flex:1;background:transparent;color:var(--muted)}.auth-tabs button.active{background:#fff;color:var(--dark);box-shadow:0 2px 8px #0000000b}.role-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.role-choice label{border:1px solid var(--line);border-radius:13px;padding:13px;cursor:pointer}.role-choice input{accent-color:var(--green)}.auth-note{font-size:12px;background:#f4f7ef;border-radius:12px;padding:11px;color:#53654d}.app{min-height:100vh}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1180px)/2))}.top-actions{display:flex;align-items:center;gap:12px}.shell{max-width:1180px;margin:24px auto;padding:0 24px;display:grid;grid-template-columns:230px 1fr;gap:24px}.sidebar{background:var(--sage2);border-radius:20px;padding:16px;height:max-content;position:sticky;top:18px}.side-label{font-size:11px;font-weight:900;letter-spacing:1px;color:#6e786b;margin:12px 9px 7px}.nav{display:grid;gap:5px}.nav button{background:transparent;color:var(--dark);text-align:left;font-weight:650}.nav button.active,.nav button:hover{background:#ffffffa8}.content{min-width:0}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin:4px 0 22px}.page-head h1{font-size:29px;letter-spacing:-.8px;margin:0}.page-head p{margin:5px 0;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 4px 18px #34453608;margin-bottom:15px}.card h2,.card h3{margin:0 0 12px}.stat{font-size:29px;font-weight:850;letter-spacing:-1px}.stat-label{font-size:13px;color:var(--muted)}.welcome{background:linear-gradient(115deg,#eaf0e3,#f8f7ed);border:0;padding:24px}.welcome h2{font-size:22px;margin:0 0 5px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.stack{display:grid;gap:9px}.item{border:1px solid var(--line);border-radius:13px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}.item-main{min-width:0}.item-title{font-weight:750;overflow-wrap:anywhere}.pill{display:inline-block;font-size:11px;font-weight:800;border-radius:30px;padding:4px 9px;background:#edf1e8;color:#52674a}.pill.blue{background:#eaf3fa;color:#426c8b}.pill.gold{background:#f7f0dc;color:#8b7132}.pill.red{background:#faeeee;color:#a64b4b}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:13px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form-row .full{grid-column:1/-1}.actions{display:flex;gap:7px;flex-wrap:wrap}.checkline{display:flex;gap:9px;align-items:center}.checkline input{accent-color:var(--green);width:17px;height:17px}.notice{padding:12px 14px;border-radius:12px;background:#eff5e9;color:#4d6545;margin:12px 0}.notice.error{background:#faeeee;color:#9b4141}.toast{position:fixed;right:22px;bottom:22px;background:var(--dark);color:#fff;padding:13px 18px;border-radius:14px;box-shadow:var(--shadow);z-index:10;max-width:320px}.divider{height:1px;background:var(--line);margin:15px 0}.footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}.file-hint{font-size:12px;color:var(--muted)}
+@media(max-width:800px){.shell{grid-template-columns:1fr}.sidebar{position:static}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr 1fr}.topbar{padding:0 16px}.wrap{padding:16px}}
+@media(max-width:520px){.grid,.grid.two,.form-row{grid-template-columns:1fr}.form-row .full{grid-column:auto}.page-head{display:block}.page-head button{margin-top:12px}.auth-card{padding:22px}.topbar .brand{font-size:19px}}
 </style>
 </head>
 <body>
-<section id="authScreen" class="auth-shell">
-  <div class="auth-intro">
-    <div class="brand">StudentFlow · TeachersFlow</div>
-    <h1>Make school life <span>simpler.</span></h1>
-    <p>A calmer space for students to organize learning and for teachers to manage classroom work.</p>
-    <p>🌿 Tasks · Reusable checklists · Learning materials · Progress</p>
-  </div>
-  <div class="auth-card">
-    <div class="brand" id="authBrand">StudentFlow</div>
-    <p class="muted" id="rolePrompt">Choose your workspace</p>
-    <div class="role-row">
-      <button class="role-choice active" id="studentRole" type="button">🎓 Student</button>
-      <button class="role-choice" id="teacherRole" type="button">👩‍🏫 Teacher</button>
-    </div>
-    <h2 id="authTitle">Welcome back!</h2>
-    <p class="muted" id="authSubtitle">Sign in to your student account.</p>
-    <form id="authForm">
-      <div class="field" id="nameWrap" hidden><label for="displayName">Your name</label><input id="displayName" autocomplete="name"></div>
-      <div class="field"><label for="email">Email</label><input id="email" type="email" required autocomplete="email"></div>
-      <div class="field"><label for="password">Password</label><input id="password" type="password" minlength="6" required autocomplete="current-password"></div>
-      <button class="primary full" id="authSubmit" type="submit">Sign in</button>
-    </form>
-    <div class="notice" id="authNotice" hidden role="status"></div>
-    <p class="muted" style="text-align:center;margin-top:18px"><span id="modePrompt">New here?</span> <button class="link-button" id="modeToggle" type="button">Create an account</button></p>
-  </div>
-</section>
-
-<section id="appScreen" class="app" hidden>
-  <aside class="sidebar">
-    <div><h2 id="workspaceName">StudentFlow</h2><div class="subbrand">YOUR SCHOOL WORKSPACE</div></div>
-    <nav class="nav" id="navigation"></nav>
-    <button class="signout" id="signOut">Sign out</button>
-  </aside>
-  <main class="main">
-    <header class="topbar"><div><h1 id="pageHeading">Dashboard</h1><p id="pageSubheading">One step at a time.</p></div><span class="badge" id="userBadge">Signed in</span></header>
-    <div id="pages"></div>
-  </main>
-</section>
-<div id="toast" class="side-toast" hidden></div>
-
+<div id="authScreen" class="auth-screen"><div class="auth-card">
+  <div class="brand"><span class="logo">✦</span> StudentFlow</div>
+  <h1 id="authTitle">A calmer way to learn.</h1><p id="authSubtitle">Sign in to your workspace, or create your account to get started.</p>
+  <div class="auth-tabs"><button id="showLogin" class="active" type="button">Log in</button><button id="showSignup" type="button">Sign up</button></div>
+  <form id="authForm">
+    <div id="nameField" class="field hidden"><label for="displayName">Your name</label><input id="displayName" autocomplete="name" placeholder="Your name"></div>
+    <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+    <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters"></div>
+    <div id="roleField" class="field hidden"><label>I'm joining as a</label><div class="role-choice"><label><input type="radio" name="role" value="student" checked> Student</label><label><input type="radio" name="role" value="teacher"> Teacher</label></div></div>
+    <div id="schoolField" class="field hidden"><label for="schoolName">School / organization</label><input id="schoolName" placeholder="School name"></div>
+    <button id="authSubmit" type="submit" style="width:100%;margin-top:8px">Log in</button>
+  </form>
+  <div id="authMessage" aria-live="polite"></div>
+  <p class="auth-note">Teacher accounts are not approved automatically. Teacher applicants must verify their email and submit school evidence for an administrator to review.</p>
+</div></div>
+<div id="appScreen" class="app hidden">
+  <header class="topbar"><div class="brand"><span class="logo">✦</span><span id="brandName">StudentFlow</span></div><div class="top-actions"><span id="userLabel" class="muted tiny"></span><button class="secondary small" id="signOut">Sign out</button></div></header>
+  <div class="shell"><aside class="sidebar"><div class="side-label" id="workspaceLabel">STUDENT WORKSPACE</div><nav class="nav" id="navigation"></nav><div class="divider"></div><div class="tiny muted">One step at a time 🌱</div></aside><main class="content" id="mainContent"></main></div>
+  <div class="footer">StudentFlow · Learning, organized</div>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
 <script>
-/* Keep your existing Supabase project URL and publishable key here. */
-const SUPABASE_URL = "PASTE_YOUR_EXISTING_PROJECT_URL";
-const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_EXISTING_PUBLISHABLE_KEY";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-const $ = (id) => document.getElementById(id);
-let selectedRole = "student";
-let isSignUp = false;
-let currentUser = null;
-let currentProfile = null;
-let activePage = "dashboard";
-let toastTimer = null;
-
-const studentPages = [
-  ["dashboard","🏠 Dashboard"],["tasks","✓ My Tasks"],
-  ["checklists","📋 Reusable Checklists"],["notes","📚 Digital Notes"],["awards","🏆 Awards"]
-];
-const teacherPages = [
-  ["dashboard","🏠 Dashboard"],["tasks","✓ Teacher Tasks"],
-  ["checklists","📋 Reusable Checklists"],["classes","🏫 My Classes"],
-  ["books","📚 Book Correction"],["materials","📝 Class Materials"],
-  ["awards","🏅 Student Awards"],["tests","📊 Test Tracker"]
-];
-
-function notice(message,isError=false){
-  $("authNotice").hidden=false;
-  $("authNotice").textContent=message;
-  $("authNotice").style.background=isError?"#FBEDEC":"#F0F5EC";
-  $("authNotice").style.color=isError?"#963F39":"#435B40";
-}
-function toast(message){
-  $("toast").textContent=message;
-  $("toast").hidden=false;
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>$("toast").hidden=true,3500);
-}
-function setRole(role){
-  selectedRole=role;
-  $("studentRole").classList.toggle("active",role==="student");
-  $("teacherRole").classList.toggle("active",role==="teacher");
-  $("authBrand").textContent=role==="student"?"StudentFlow":"TeachersFlow";
-  $("authSubtitle").textContent=`Sign in to your ${role==="student"?"student":"teacher"} account.`;
-  $("authNotice").hidden=true;
-}
-$("studentRole").addEventListener("click",()=>setRole("student"));
-$("teacherRole").addEventListener("click",()=>setRole("teacher"));
-$("modeToggle").addEventListener("click",()=>{
-  isSignUp=!isSignUp;
-  $("nameWrap").hidden=!isSignUp;
-  $("authTitle").textContent=isSignUp?"Create your account":"Welcome back!";
-  $("authSubmit").textContent=isSignUp?"Create account":"Sign in";
-  $("modePrompt").textContent=isSignUp?"Already registered?":"New here?";
-  $("modeToggle").textContent=isSignUp?"Sign in":"Create an account";
-  $("authNotice").hidden=true;
-});
-
-function makePage(id,title,subtitle,html){
-  const section=document.createElement("section");
-  section.className="page";
-  section.id=`page-${id}`;
-  section.innerHTML=html;
-  section.dataset.title=title;
-  section.dataset.subtitle=subtitle;
-  return section;
-}
-function renderShell(){
-  const isTeacher=currentProfile.role==="teacher";
-  const pages=isTeacher?teacherPages:studentPages;
-  $("workspaceName").textContent=isTeacher?"TeachersFlow":"StudentFlow";
-  $("userBadge").textContent=currentProfile.display_name||"Signed in";
-  $("navigation").replaceChildren();
-  $("pages").replaceChildren();
-  pages.forEach(([id,label])=>{
-    const button=document.createElement("button");
-    button.type="button";button.textContent=label;button.dataset.page=id;
-    button.addEventListener("click",()=>openPage(id));
-    $("navigation").appendChild(button);
-    $("pages").appendChild(pageTemplates(id,isTeacher));
-  });
-  $("authScreen").hidden=true;$("appScreen").hidden=false;
-  openPage("dashboard");
-  loadAllVisibleData();
-}
-function pageTemplates(id,isTeacher){
-  if(id==="dashboard")return makePage(id,"Dashboard","One step at a time.",`
-    <div class="welcome"><h2 id="welcomeTitle">Welcome!</h2><p>${isTeacher?"Plan your teaching day, support your classes and keep everything in one place.":"Stay organized, keep learning and celebrate your progress."}</p></div>
-    <div class="stats">
-      <div class="stat"><span>Tasks remaining</span><strong id="statRemaining">0</strong></div>
-      <div class="stat"><span>Tasks completed</span><strong id="statCompleted">0</strong></div>
-      <div class="stat"><span>${isTeacher?"Classes":"Award points"}</span><strong id="statExtra">0</strong></div>
-    </div>
-    <div class="panel"><h2>Today's priorities</h2><div id="priorityList" class="stack"><div class="empty">Loading your tasks…</div></div></div>
-    <div class="panel" style="margin-top:15px"><h2>Task celebration</h2><div id="completionMessage" class="empty">Every small step counts. 🌱</div></div>`);
-  if(id==="tasks")return makePage(id,isTeacher?"Teacher Tasks":"My Tasks","Add tasks, choose a category and tick them off as you finish.",`
-    <form id="taskForm" class="panel">
-      <div class="form-grid">
-        <div class="field"><label for="taskTitle">Task</label><input id="taskTitle" required maxlength="180" placeholder="${isTeacher?"e.g. Prepare tomorrow's worksheets":"e.g. Finish science homework"}"></div>
-        <div class="field"><label for="taskCategory">Category</label><select id="taskCategory"><option>Must Do Today</option><option>Can Do Tomorrow</option><option>Can Be Simplified</option></select></div>
-        <button class="primary" type="submit">Add task</button>
-      </div>
-    </form><div id="taskFeedback" class="muted" aria-live="polite"></div><div id="taskList" class="stack"></div>`);
-  if(id==="checklists")return makePage(id,"Reusable Checklists","Save a routine once, then reset it whenever you want to reuse it.",`
-    <form id="checklistForm" class="panel">
-      <div class="field"><label for="checklistTitle">Checklist name</label><input id="checklistTitle" required maxlength="120" placeholder="e.g. Weekly planning"></div>
-      <div class="field"><label for="checklistItems">Items — one per line</label><textarea id="checklistItems" rows="5" required placeholder="Review calendar&#10;Prepare materials&#10;Check completed work"></textarea></div>
-      <button class="primary" type="submit">Save checklist</button>
-    </form><div id="checklistList" class="stack"></div>`);
-  if(id==="notes")return makePage(id,"Digital Notes","Learning materials shared with your classes.",`<div id="notesList" class="stack"><div class="empty">Loading materials…</div></div>`);
-  if(id==="awards")return makePage(id,isTeacher?"Student Awards":"My Awards",isTeacher?"Award points to students in your classes.":"Celebrate the progress your teachers recognize.",isTeacher?`
-    <form id="awardForm" class="panel"><div class="two-col">
-      <div class="field"><label>Student profile ID</label><input id="awardStudent" required placeholder="Student UUID"></div>
-      <div class="field"><label>Points</label><input id="awardPointsInput" type="number" min="1" required></div>
-    </div><div class="field"><label>Reason</label><input id="awardReason" required maxlength="180"></div><button class="primary">Give award</button></form><div id="awardList" class="stack"></div>`:`<div class="panel"><h2>Total points: <span id="myPoints">0</span></h2><div id="awardList" class="stack"></div></div>`);
-  if(id==="classes")return makePage(id,"My Classes","Create a class and enroll students using their profile IDs.",`
-    <form id="classForm" class="panel"><div class="field"><label>Class name</label><input id="className" required placeholder="e.g. Grade 6A"></div><button class="primary">Create class</button></form>
-    <div class="panel" style="margin-top:14px"><h2>Enroll a student</h2><form id="enrollForm"><div class="field"><label>Class</label><select id="enrollClass" required></select></div><div class="field"><label>Student profile ID</label><input id="enrollStudent" required placeholder="Student UUID"></div><button class="primary">Enroll student</button></form></div>
-    <div id="classList" class="stack"></div>`);
-  if(id==="books")return makePage(id,"Book Correction","Track exercise-book correction for students in your classes.",`
-    <form id="bookForm" class="panel"><div class="two-col"><div class="field"><label>Student profile ID</label><input id="bookStudent" required placeholder="Student UUID"></div><div class="field"><label>Subject</label><input id="bookSubject" required placeholder="e.g. English"></div></div><button class="primary">Add book record</button></form><div id="bookList" class="stack"></div>`);
-  if(id==="materials")return makePage(id,"Class Materials","Share notes and learning materials with an enrolled class.",`
-    <form id="materialForm" class="panel"><div class="two-col"><div class="field"><label>Class</label><select id="materialClass" required></select></div><div class="field"><label>Subject</label><input id="materialSubject" required></div></div>
-    <div class="two-col"><div class="field"><label>Chapter</label><input id="materialChapter"></div><div class="field"><label>Topic</label><input id="materialTopic"></div></div>
-    <div class="field"><label>Type</label><select id="materialType"><option>Notes</option><option>Worksheet</option><option>Revision</option><option>Announcement</option></select></div>
-    <div class="field"><label>Content</label><textarea id="materialContent" rows="5" placeholder="Write the notes or instructions to share"></textarea></div><button class="primary">Share material</button></form><div id="teacherMaterials" class="stack"></div>`);
-  if(id==="tests")return makePage(id,"Test Tracker","Record test results for students in your classes.",`
-    <form id="testForm" class="panel"><div class="two-col"><div class="field"><label>Student profile ID</label><input id="testStudent" required placeholder="Student UUID"></div><div class="field"><label>Test name</label><input id="testName" required></div></div>
-    <div class="two-col"><div class="field"><label>Score</label><input id="testScore" type="number" min="0" step="any" required></div><div class="field"><label>Total</label><input id="testTotal" type="number" min="0.01" step="any" required></div></div>
-    <div class="field"><label>Teacher note (optional)</label><textarea id="testNote" rows="2"></textarea></div><button class="primary">Save result</button></form><div id="testList" class="stack"></div>`);
-  return makePage(id,"Page","",`<div class="empty">This page is not available.</div>`);
-}
-function openPage(id){
-  activePage=id;
-  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===`page-${id}`));
-  document.querySelectorAll("#navigation button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
-  const page=$(`page-${id}`);
-  if(page){$("pageHeading").textContent=page.dataset.title;$("pageSubheading").textContent=page.dataset.subtitle;}
-  if(id==="tasks")loadTasks();
-  if(id==="checklists")loadChecklists();
-  if(id==="classes")loadClasses();
-  if(id==="books")loadBooks();
-  if(id==="materials")loadTeacherMaterials();
-  if(id==="notes")loadNotes();
-  if(id==="awards")loadAwards();
-  if(id==="tests")loadTests();
-}
-function el(tag,text,className){
-  const node=document.createElement(tag);
-  if(text!==undefined)node.textContent=text;
-  if(className)node.className=className;
-  return node;
-}
-async function loadAllVisibleData(){
-  await loadTasks();
-  if(currentProfile.role==="teacher")await loadClasses();
-  else {await loadNotes();await loadAwards();}
-}
-async function loadTasks(){
-  if(!currentUser)return;
-  const {data,error}=await supabaseClient.from("tasks").select("id,title,category,completed,created_at").eq("owner_id",currentUser.id).order("created_at",{ascending:false});
-  if(error){console.error(error);const target=$("taskList")||$("priorityList");if(target)target.replaceChildren(el("div","Tasks couldn't load. Check the browser console for details.","empty"));return;}
-  const tasks=data||[],open=tasks.filter(t=>!t.completed),done=tasks.filter(t=>t.completed);
-  if($("statRemaining"))$("statRemaining").textContent=open.length;
-  if($("statCompleted"))$("statCompleted").textContent=done.length;
-  if($("statExtra")&&currentProfile.role==="teacher")$("statExtra").textContent=document.querySelectorAll("#classList .card").length;
-  const message=$("completionMessage");
-  if(message)message.textContent=open.length===0?(tasks.length?"All tasks completed — hooray! 🎉":"Add your first task to get started. 🌱"):`You have ${open.length} task${open.length===1?"":"s"} left. You've got this!`;
-  const priority=$("priorityList");
-  if(priority){priority.replaceChildren();const today=open.filter(t=>t.category==="Must Do Today");if(!today.length)priority.append(el("div",open.length===0&&tasks.length?"All tasks completed — hooray! 🎉":"No urgent tasks right now. Enjoy the breathing room!","empty"));today.forEach(t=>priority.append(renderTask(t)));}
-  const list=$("taskList");
-  if(list){list.replaceChildren();if(!open.length)list.append(el("div",tasks.length?"All tasks completed — hooray! 🎉":"No tasks yet. Add your first task above!","empty"));open.forEach(t=>list.append(renderTask(t)));}
-}
-function renderTask(task){
-  const row=el("div",undefined,"task");
-  const cb=document.createElement("input");cb.type="checkbox";cb.setAttribute("aria-label",`Complete ${task.title}`);
-  cb.addEventListener("change",async()=>{
-    cb.disabled=true;
-    const {error}=await supabaseClient.from("tasks").update({completed:true}).eq("id",task.id).eq("owner_id",currentUser.id);
-    if(error){cb.checked=false;cb.disabled=false;toast("Couldn't update the task. Please try again.");console.error(error);return;}
-    toast("Yay! You completed a task! 🎉");
-    await loadTasks();
-  });
-  const copy=el("div",undefined,"task-copy");copy.append(el("strong",task.title,"task-title"),el("small",task.category||"Task"));
-  row.append(cb,copy);return row;
-}
-$("pages").addEventListener("submit",async event=>{
-  const form=event.target;if(!(form instanceof HTMLFormElement))return;
-  event.preventDefault();
-  const id=activePage;
-  if(id==="tasks"&&form.id==="taskForm"){
-    const title=$("taskTitle").value.trim();if(!title)return;
-    const {error}=await supabaseClient.from("tasks").insert({owner_id:currentUser.id,title,category:$("taskCategory").value,completed:false});
-    if(error){toast("Task couldn't be saved.");console.error(error);return;}
-    form.reset();toast("Task added! 🌱");await loadTasks();
-  }
-  if(id==="checklists"&&form.id==="checklistForm"){
-    const title=$("checklistTitle").value.trim(),items=$("checklistItems").value.split("\n").map(s=>s.trim()).filter(Boolean).map(text=>({text,done:false}));
-    if(!items.length){toast("Add at least one checklist item.");return;}
-    const {error}=await supabaseClient.from("reusable_checklists").insert({owner_id:currentUser.id,title,items});
-    if(error){toast("Checklist couldn't be saved.");console.error(error);return;}
-    form.reset();toast("Checklist saved!");loadChecklists();
-  }
-  if(id==="classes"&&form.id==="classForm"){
-    const {error}=await supabaseClient.from("classes").insert({name:$("className").value.trim(),teacher_id:currentUser.id});
-    if(error){toast("Class couldn't be created.");console.error(error);return;}
-    form.reset();toast("Class created!");loadClasses();
-  }
-  if(id==="classes"&&form.id==="enrollForm"){
-    const {error}=await supabaseClient.from("class_members").insert({class_id:$("enrollClass").value,student_id:$("enrollStudent").value.trim()});
-    if(error){toast("Student couldn't be enrolled. Check the profile ID and class.");console.error(error);return;}
-    form.reset();toast("Student enrolled!");loadClasses();
-  }
-  if(id==="books"&&form.id==="bookForm"){
-    const {error}=await supabaseClient.from("book_corrections").insert({teacher_id:currentUser.id,student_id:$("bookStudent").value.trim(),subject:$("bookSubject").value.trim(),status:"Not Checked"});
-    if(error){toast("Book record couldn't be added. Check class enrollment and student ID.");console.error(error);return;}
-    form.reset();toast("Book record added!");loadBooks();
-  }
-  if(id==="materials"&&form.id==="materialForm"){
-    const {error}=await supabaseClient.from("materials").insert({teacher_id:currentUser.id,class_id:$("materialClass").value,subject:$("materialSubject").value.trim(),chapter:$("materialChapter").value.trim()||null,topic:$("materialTopic").value.trim()||null,material_type:$("materialType").value,notes_content:$("materialContent").value.trim()||null});
-    if(error){toast("Material couldn't be shared.");console.error(error);return;}
-    form.reset();toast("Material shared with the class!");loadTeacherMaterials();
-  }
-  if(id==="awards"&&form.id==="awardForm"){
-    const {error}=await supabaseClient.from("awards").insert({teacher_id:currentUser.id,student_id:$("awardStudent").value.trim(),points:Number($("awardPointsInput").value),reason:$("awardReason").value.trim()});
-    if(error){toast("Award couldn't be saved. Check student enrollment.");console.error(error);return;}
-    form.reset();toast("Award added!");loadAwards();
-  }
-  if(id==="tests"&&form.id==="testForm"){
-    const score=Number($("testScore").value),total=Number($("testTotal").value);
-    if(total<=0||score<0||score>total){toast("Check the score and total.");return;}
-    const {error}=await supabaseClient.from("test_results").insert({teacher_id:currentUser.id,student_id:$("testStudent").value.trim(),test_name:$("testName").value.trim(),score,total,teacher_note:$("testNote").value.trim()||null});
-    if(error){toast("Test result couldn't be saved.");console.error(error);return;}
-    form.reset();toast("Test result saved!");loadTests();
-  }
-});
-async function loadChecklists(){
-  const list=$("checklistList");if(!list||!currentUser)return;
-  list.replaceChildren(el("div","Loading checklists…","empty"));
-  const {data,error}=await supabaseClient.from("reusable_checklists").select("id,title,items").eq("owner_id",currentUser.id).order("created_at",{ascending:false});
-  list.replaceChildren();
-  if(error){list.append(el("div","Couldn't load checklists.","empty"));console.error(error);return;}
-  if(!data?.length){list.append(el("div","No saved checklists yet. Create one above!","empty"));return;}
-  data.forEach(check=>{
-    const card=el("div",undefined,"card");card.append(el("h3",check.title));
-    const items=Array.isArray(check.items)?check.items:[];
-    const itemBox=el("div",undefined,"check-items");
-    items.forEach((item,index)=>{
-      const label=el("label",undefined,"check-item"),cb=document.createElement("input");cb.type="checkbox";cb.checked=!!item.done;
-      const text=el("span",item.text);if(item.done)text.style.textDecoration="line-through";
-      cb.addEventListener("change",async()=>{
-        const updated=items.map((it,i)=>({...it,done:i===index?cb.checked:!!it.done}));
-        const {error}=await supabaseClient.from("reusable_checklists").update({items:updated}).eq("id",check.id).eq("owner_id",currentUser.id);
-        if(error){toast("Checklist update failed.");console.error(error);}else loadChecklists();
-      });label.append(cb,text);itemBox.append(label);
-    });
-    const actions=el("div",undefined,"inline-actions");
-    const reset=el("button","Reset to reuse","small-btn");reset.type="button";reset.addEventListener("click",async()=>{
-      const {error}=await supabaseClient.from("reusable_checklists").update({items:items.map(it=>({...it,done:false}))}).eq("id",check.id).eq("owner_id",currentUser.id);
-      if(error){toast("Couldn't reset checklist.");console.error(error);}else{toast("Checklist reset!");loadChecklists();}
-    });
-    const del=el("button","Delete","small-btn danger");del.type="button";del.addEventListener("click",async()=>{
-      if(!confirm(`Delete "${check.title}"?`))return;
-      const {error}=await supabaseClient.from("reusable_checklists").delete().eq("id",check.id).eq("owner_id",currentUser.id);
-      if(error){toast("Couldn't delete checklist.");console.error(error);}else loadChecklists();
-    });
-    actions.append(reset,del);card.append(itemBox,actions);list.append(card);
-  });
-}
-async function loadClasses(){
-  if(currentProfile.role!=="teacher")return;
-  const {data,error}=await supabaseClient.from("classes").select("id,name,created_at").eq("teacher_id",currentUser.id).order("created_at",{ascending:false});
-  const list=$("classList");if(list){list.replaceChildren();if(error)list.append(el("div","Couldn't load classes.","empty"));else if(!data?.length)list.append(el("div","No classes yet.","empty"));else data.forEach(c=>{const card=el("div",undefined,"card");card.append(el("strong",c.name),el("p",`Class ID: ${c.id}`,"muted"));list.append(card);});}
-  ["enrollClass","materialClass"].forEach(id=>{const select=$(id);if(select){select.replaceChildren();(data||[]).forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.name;select.append(o);});}});
-  if($("statExtra"))$("statExtra").textContent=(data||[]).length;
-}
-async function loadBooks(){
-  const list=$("bookList");if(!list)return;
-  const {data,error}=await supabaseClient.from("book_corrections").select("id,student_id,subject,status").eq("teacher_id",currentUser.id).order("updated_at",{ascending:false});
-  list.replaceChildren();
-  if(error){list.append(el("div","Couldn't load book records.","empty"));console.error(error);return;}
-  if(!data?.length){list.append(el("div","No book-correction records yet.","empty"));return;}
-  data.forEach(record=>{
-    const row=el("div",undefined,"list-row"),copy=el("div",undefined,"task-copy");copy.append(el("strong",record.subject),el("small",`Student ID: ${record.student_id}`));
-    const select=document.createElement("select");["Not Checked","In Progress","Corrected"].forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;select.append(o);});select.value=record.status;
-    select.addEventListener("change",async()=>{const {error}=await supabaseClient.from("book_corrections").update({status:select.value,updated_at:new Date().toISOString()}).eq("id",record.id).eq("teacher_id",currentUser.id);if(error){toast("Status update failed.");console.error(error);}else toast("Book status updated.");});
-    row.append(copy,select);list.append(row);
-  });
-}
-async function loadTeacherMaterials(){
-  const list=$("teacherMaterials");if(!list)return;
-  const {data,error}=await supabaseClient.from("materials").select("id,subject,topic,material_type,notes_content,class_id").eq("teacher_id",currentUser.id).order("created_at",{ascending:false});
-  list.replaceChildren();if(error){list.append(el("div","Couldn't load materials.","empty"));console.error(error);return;}
-  if(!data?.length){list.append(el("div","No shared materials yet.","empty"));return;}
-  data.forEach(m=>{const c=el("div",undefined,"card");c.append(el("strong",m.subject),el("p",m.topic||m.material_type),el("p",m.notes_content||"","muted"));list.append(c);});
-}
-async function loadNotes(){
-  const list=$("notesList");if(!list)return;
-  const {data,error}=await supabaseClient.from("materials").select("subject,chapter,topic,material_type,notes_content,created_at").order("created_at",{ascending:false});
-  list.replaceChildren();if(error){list.append(el("div","Learning materials couldn't load.","empty"));console.error(error);return;}
-  if(!data?.length){list.append(el("div","Your teachers haven't shared materials yet.","empty"));return;}
-  data.forEach(m=>{const c=el("div",undefined,"card");c.append(el("strong",m.subject),el("p",m.topic||m.chapter||m.material_type),el("p",m.notes_content||"","muted"));list.append(c);});
-}
-async function loadAwards(){
-  const teacher=currentProfile.role==="teacher",list=$("awardList");if(!list)return;
-  let query=supabaseClient.from("awards").select("points,reason,created_at,student_id").order("created_at",{ascending:false});
-  query=teacher?query.eq("teacher_id",currentUser.id):query.eq("student_id",currentUser.id);
-  const {data,error}=await query;list.replaceChildren();
-  if(error){list.append(el("div","Awards couldn't load.","empty"));console.error(error);return;}
-  if(!data?.length){list.append(el("div","No awards yet. Keep going! 🌱","empty"));return;}
-  if(!teacher&&$("myPoints"))$("myPoints").textContent=data.reduce((sum,a)=>sum+Number(a.points),0);
-  data.forEach(a=>{const c=el("div",undefined,"card");c.append(el("strong",`${a.points} points · ${a.reason}`),teacher?el("p",`Student ID: ${a.student_id}`,"muted"):el("p","Well done!","muted"));list.append(c);});
-}
-async function loadTests(){
-  const list=$("testList");if(!list)return;
-  const {data,error}=await supabaseClient.from("test_results").select("student_id,test_name,score,total,teacher_note,created_at").eq("teacher_id",currentUser.id).order("created_at",{ascending:false});
-  list.replaceChildren();if(error){list.append(el("div","Test results couldn't load.","empty"));console.error(error);return;}
-  if(!data?.length){list.append(el("div","No test results recorded yet.","empty"));return;}
-  data.forEach(t=>{const c=el("div",undefined,"card");c.append(el("strong",t.test_name),el("p",`${t.score} / ${t.total} · Student: ${t.student_id}`),el("p",t.teacher_note||"","muted"));list.append(c);});
-}
-
-async function openWorkspace(user,profile){
-  currentUser=user;currentProfile=profile;
-  if(profile.role==="pending_teacher"){await supabaseClient.auth.signOut();currentUser=null;currentProfile=null;$("appScreen").hidden=true;$("authScreen").hidden=false;notice("Your teacher account is waiting for approval. Please contact the project administrator.");return;}
-  if(profile.role!=="student"&&profile.role!=="teacher"){await supabaseClient.auth.signOut();notice("This account doesn't have an approved workspace.");return;}
-  renderShell();
-}
-$("authForm").addEventListener("submit",async event=>{
-  event.preventDefault();$("authSubmit").disabled=true;$("authSubmit").textContent="Please wait…";$("authNotice").hidden=true;
-  const email=$("email").value.trim(),password=$("password").value,name=$("displayName").value.trim();
-  try{
-    if(isSignUp){
-      if(!name)throw new Error("Please enter your name.");
-      const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:name,requested_role:selectedRole}}});
-      if(error)throw error;
-      if(data.session&&data.user){
-        const {data:profile,error:profileError}=await supabaseClient.from("profiles").select("display_name,role").eq("id",data.user.id).single();
-        if(profileError)throw profileError;
-        await openWorkspace(data.user,profile);
-      }else notice(selectedRole==="teacher"?"Teacher request created. Confirm your email, then wait for approval.":"Account created. Confirm your email before signing in.");
-    }else{
-      const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;
-      const {data:profile,error:profileError}=await supabaseClient.from("profiles").select("display_name,role").eq("id",data.user.id).single();
-      if(profileError)throw profileError;
-      if((selectedRole==="teacher"&&profile.role!=="teacher")||(selectedRole==="student"&&profile.role!=="student")){
-        await supabaseClient.auth.signOut();
-        if(profile.role==="pending_teacher")throw new Error("Your teacher account is awaiting approval.");
-        throw new Error(`This account is not an approved ${selectedRole} account. Choose the correct workspace.`);
-      }
-      await openWorkspace(data.user,profile);
-    }
-  }catch(error){notice(error.message||"Something went wrong.",true);console.error(error);}
-  finally{$("authSubmit").disabled=false;$("authSubmit").textContent=isSignUp?"Create account":"Sign in";}
-});
-$("signOut").addEventListener("click",async()=>{
-  const {error}=await supabaseClient.auth.signOut();if(error){toast("Couldn't sign out.");console.error(error);return;}
-  currentUser=null;currentProfile=null;$("appScreen").hidden=true;$("authScreen").hidden=false;$("authForm").reset();isSignUp=false;setRole("student");
-});
-async function restoreSession(){
-  const {data,error}=await supabaseClient.auth.getSession();
-  if(error){console.error(error);return;}
-  if(!data.session)return;
-  const {data:profile,error:profileError}=await supabaseClient.from("profiles").select("display_name,role").eq("id",data.session.user.id).single();
-  if(profileError){console.error(profileError);return;}
-  await openWorkspace(data.session.user,profile);
-}
-if(SUPABASE_URL.includes("PASTE_")||SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")){
-  notice("Add your existing Supabase project URL and publishable key in the script before using the app.",true);
-}else{restoreSession();}
+// Add your Supabase project details here. Use the publishable key, never a secret/service-role key.
+const SUPABASE_URL = 'PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
+const SUPABASE_PUBLISHABLE_KEY = 'PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE';
+const db = (window.supabase && SUPABASE_URL.startsWith('https://') && !SUPABASE_PUBLISHABLE_KEY.includes('PASTE_'))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
+let currentUser=null, profile=null, currentPage='home', authMode='login', taskCache=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),3000)}
+function message(msg,error=false){$('authMessage').innerHTML=`<div class="notice ${error?'error':''}">${esc(msg)}</div>`}
+function setAuthMode(mode){authMode=mode;$('showLogin').classList.toggle('active',mode==='login');$('showSignup').classList.toggle('active',mode==='signup');$('nameField').classList.toggle('hidden',mode==='login');$('roleField').classList.toggle('hidden',mode==='login');$('schoolField').classList.add('hidden');$('authTitle').textContent=mode==='login'?'Welcome back.':'Create your workspace.';$('authSubtitle').textContent=mode==='login'?'Sign in to continue.':'Choose your role and create your account.';$('authSubmit').textContent=mode==='login'?'Log in':'Create account';$('authMessage').innerHTML='';$('password').autocomplete=mode==='login'?'current-password':'new-password'}
+$('showLogin').onclick=()=>setAuthMode('login');$('showSignup').onclick=()=>setAuthMode('signup');
+document.querySelectorAll('input[name="role"]').forEach(r=>r.addEventListener('change',()=>{$('schoolField').classList.toggle('hidden',document.querySelector('input[name="role"]:checked').value!=='teacher')}));
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();if(!db){message('Add your Supabase Project URL and publishable key in the script section first.',true);return}const email=$('email').value.trim(),password=$('password').value; $('authSubmit').disabled=true;try{if(authMode==='signup'){const role=document.querySelector('input[name="role"]:checked').value;const metadata={display_name:$('displayName').value.trim(),requested_role:role,school_name:$('schoolName').value.trim()};if(!metadata.display_name)throw Error('Please enter your name.');if(role==='teacher'&&!metadata.school_name)throw Error('Please enter your school or organization.');const {data,error}=await db.auth.signUp({email,password,options:{data:metadata,emailRedirectTo:location.origin+location.pathname}});if(error)throw error;if(data.session){await loadApp(data.user)}else{message('Account created! Check your email and click the confirmation link. Then return here and log in.')}}else{const {data,error}=await db.auth.signInWithPassword({email,password});if(error)throw error;await loadApp(data.user)}}catch(err){message(err.message||'Something went wrong.',true)}finally{$('authSubmit').disabled=false}});
+$('signOut').onclick=async()=>{await db.auth.signOut();currentUser=null;profile=null;$('appScreen').classList.add('hidden');$('authScreen').classList.remove('hidden');setAuthMode('login')};
+async function loadApp(user){currentUser=user;const {data,error}=await db.from('profiles').select('*').eq('id',user.id).maybeSingle();if(error)throw error;if(!data){message('Your profile is still being prepared. Please wait a moment, then log in again.',true);return}profile=data;$('authScreen').classList.add('hidden');$('appScreen').classList.remove('hidden');$('userLabel').textContent=(profile.display_name||user.email)+' · ID: '+user.id;$('brandName').textContent=profile.role==='teacher'||profile.role==='admin'?'TeachersFlow':'StudentFlow';$('workspaceLabel').textContent=(profile.role==='teacher'||profile.role==='admin'?'TEACHER':'STUDENT')+' WORKSPACE';buildNavigation();await navigate('home')}
+const studentNav=[['home','Overview'],['tasks','My tasks'],['checklists','Reusable checklists'],['materials','Class materials'],['awards','My awards'],['tests','Test results']];
+const teacherNav=[['home','Overview'],['tasks','Teacher tasks'],['checklists','Reusable checklists'],['classes','My classes'],['books','Book correction'],['materials','Class materials'],['awards','Awards'],['tests','Test tracker'],['applications','Teacher applications']];
+function buildNavigation(){const nav=(profile.role==='teacher'||profile.role==='admin')?teacherNav:studentNav;$('navigation').innerHTML=nav.filter(([p])=>p!=='applications'||profile.role==='admin').map(([p,l])=>`<button data-page="${p}">${l}</button>`).join('');$('navigation').querySelectorAll('button').forEach(b=>b.onclick=()=>navigate(b.dataset.page))}
+function setPageHead(title,sub,button=''){return `<div class="page-head"><div><h1>${title}</h1><p>${sub}</p></div>${button}</div>`}
+function isTeacher(){return profile.role==='teacher'||profile.role==='admin'}
+async function navigate(page){currentPage=page;$('navigation').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const root=$('mainContent');root.innerHTML='<div class="card">Loading…</div>';try{if(profile.role==='pending_teacher'){root.innerHTML=setPageHead('Teacher application pending','Your account is not a teacher workspace yet.')+`<div class="card"><h2>One more step</h2><p>Your email must be confirmed, and your school evidence must be reviewed by an administrator before teacher access is granted.</p><div class="field"><label>School / organization</label><input id="evidenceSchool" placeholder="School name" value="${esc(profile.school_name||'')}"></div><div class="field"><label>School evidence file</label><input id="evidenceFile" type="file" accept=".pdf,.png,.jpg,.jpeg"></div><p class="file-hint">Use a non-sensitive school-issued confirmation or invitation. Do not upload government ID or private personal documents.</p><button id="submitEvidence">Submit for review</button><div id="evidenceStatus"></div></div>`;$('submitEvidence').onclick=submitEvidence;await showEvidenceStatus();return}
+if(page==='home')await renderHome(root);else if(page==='tasks')await renderTasks(root);else if(page==='checklists')await renderChecklists(root);else if(page==='classes'&&isTeacher())await renderClasses(root);else if(page==='books'&&isTeacher())await renderBooks(root);else if(page==='materials')await renderMaterials(root);else if(page==='awards')await renderAwards(root);else if(page==='tests')await renderTests(root);else if(page==='applications'&&profile.role==='admin')await renderApplications(root);else root.innerHTML=setPageHead('Not available','This section is not available for this account.') }catch(err){root.innerHTML=`<div class="card"><h2>We couldn't load this section</h2><p class="muted">${esc(err.message||err)}</p><p class="tiny muted">Check that the SQL setup completed and that this account has permission to view this data.</p><button class="secondary" onclick="navigate('${page}')">Try again</button></div>`}}
+async function rows(table,query){const {data,error}=await query;if(error)throw error;return data||[]}
+async function renderHome(root){const teacher=isTeacher();const taskRows=await rows('tasks',db.from('tasks').select('*').eq('owner_id',currentUser.id).eq('completed',false).order('created_at',{ascending:false}));taskCache=taskRows;const title=teacher?'Welcome to TeachersFlow':'Welcome to StudentFlow';root.innerHTML=setPageHead(title,'A little organization can make a big difference.')+`<div class="card welcome"><h2>One thing at a time 🌱</h2><p>Keep your learning and schoolwork moving, one step at a time.</p><button id="homeAddTask">+ Add a task</button></div><div class="grid"><div class="card"><div class="stat">${taskRows.length}</div><div class="stat-label">Active tasks</div></div><div class="card"><div class="stat">${taskRows.filter(t=>t.category==='today').length}</div><div class="stat-label">Must do today</div></div><div class="card"><div class="stat">${taskRows.filter(t=>t.category==='tomorrow').length}</div><div class="stat-label">For tomorrow</div></div></div><div class="card"><div class="row"><h2>Today's priorities</h2><button class="secondary small" id="homeViewTasks">View all</button></div><div class="stack" id="homeTaskList"></div></div>`;$('homeAddTask').onclick=()=>openTaskForm();$('homeViewTasks').onclick=()=>navigate('tasks');const list=$('homeTaskList');const today=taskRows.filter(t=>t.category==='today');list.innerHTML=today.length?today.map(taskHTML).join(''):'<div class="empty">No urgent tasks right now. Nice work!</div>';wireTaskButtons(list)}
+function taskHTML(t){return `<div class="item"><div class="item-main"><div class="item-title">${esc(t.title)}</div><span class="pill">${t.category==='today'?'Must do today':t.category==='tomorrow'?'Can do tomorrow':'Can be simplified'}</span></div><div class="actions"><button class="small" data-done="${t.id}">Done ✓</button><button class="small danger" data-delete-task="${t.id}">Delete</button></div></div>`}
+function wireTaskButtons(parent){parent.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>completeTask(b.dataset.done));parent.querySelectorAll('[data-delete-task]').forEach(b=>b.onclick=()=>deleteTask(b.dataset.deleteTask))}
+async function completeTask(id){const {error}=await db.from('tasks').update({completed:true}).eq('id',id).eq('owner_id',currentUser.id);if(error){toast(error.message);return}toast('Yay! You completed a task! 🎉');await navigate(currentPage)}
+async function deleteTask(id){if(!confirm('Delete this task?'))return;const {error}=await db.from('tasks').delete().eq('id',id).eq('owner_id',currentUser.id);if(error){toast(error.message);return}toast('Task deleted');await navigate(currentPage)}
+function openTaskForm(){const old=document.getElementById('taskComposer');if(old)old.remove();const box=document.createElement('div');box.id='taskComposer';box.className='card';box.innerHTML=`<h2>Add a task</h2><form id="taskForm"><div class="field"><label>Task</label><input id="taskTitle" required maxlength="160" placeholder="What needs to get done?"></div><div class="field"><label>Sort it</label><select id="taskCategory"><option value="today">Must Do Today</option><option value="tomorrow">Can Do Tomorrow</option><option value="simplify">Can Be Simplified</option></select></div><div class="actions"><button>Save task</button><button type="button" class="secondary" id="cancelTask">Cancel</button></div></form>`;$('mainContent').prepend(box);$('cancelTask').onclick=()=>box.remove();$('taskForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('tasks').insert({owner_id:currentUser.id,title:$('taskTitle').value.trim(),category:$('taskCategory').value});if(error){toast(error.message);return}toast('Task added');await navigate(currentPage)}}
+async function renderTasks(root){const data=await rows('tasks',db.from('tasks').select('*').eq('owner_id',currentUser.id).order('created_at',{ascending:false}));root.innerHTML=setPageHead(isTeacher()?'Teacher tasks':'My tasks','Sort tasks into simple priorities.','<button id="addTask">+ Add task</button>')+`<div class="card"><div class="stack">${data.length?data.map(taskHTML).join(''):'<div class="empty">No tasks yet. Add your first task!</div>'}</div></div>`;$('addTask').onclick=openTaskForm;wireTaskButtons(root)}
+async function renderChecklists(root){const data=await rows('reusable_checklists',db.from('reusable_checklists').select('*').eq('owner_id',currentUser.id).order('created_at',{ascending:false}));root.innerHTML=setPageHead('Reusable checklists','Save routines and reuse them whenever you need.')+`<div class="card"><h2>Create a checklist</h2><form id="checkForm"><div class="field"><label>Checklist name</label><input id="checkTitle" required placeholder="e.g. Pack my school bag"></div><div class="field"><label>Items (one per line)</label><textarea id="checkItems" required placeholder="Books\nPencil case\nWater bottle"></textarea></div><button>Save checklist</button></form></div><div class="grid two" id="checklistGrid">${data.map(c=>`<div class="card"><div class="row"><h3>${esc(c.title)}</h3><button class="small danger" data-check-delete="${c.id}">Delete</button></div><div class="stack">${(Array.isArray(c.items)?c.items:[]).map((it,i)=>`<label class="checkline"><input type="checkbox" data-check-id="${c.id}" data-item="${i}" ${it.done?'checked':''}><span>${esc(it.text||it)}</span></label>`).join('')}</div><div class="divider"></div><button class="secondary small" data-reset="${c.id}">Reset checklist</button></div>`).join('')||'<div class="empty">No saved checklists yet.</div>'}</div>`;$('checkForm').onsubmit=async e=>{e.preventDefault();const items=$('checkItems').value.split('\n').map(s=>s.trim()).filter(Boolean).map(text=>({text,done:false}));const {error}=await db.from('reusable_checklists').insert({owner_id:currentUser.id,title:$('checkTitle').value.trim(),items});if(error){toast(error.message);return}toast('Checklist saved');navigate('checklists')};root.querySelectorAll('[data-check-id]').forEach(cb=>cb.onchange=async()=>{const c=data.find(x=>x.id===cb.dataset.checkId);const items=Array.isArray(c.items)?c.items:[];items[Number(cb.dataset.item)].done=cb.checked;const {error}=await db.from('reusable_checklists').update({items}).eq('id',c.id).eq('owner_id',currentUser.id);if(error)toast(error.message)});root.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{const c=data.find(x=>x.id===b.dataset.reset);const items=(Array.isArray(c.items)?c.items:[]).map(it=>({...it,done:false}));const {error}=await db.from('reusable_checklists').update({items}).eq('id',c.id);if(error)toast(error.message);else navigate('checklists')});root.querySelectorAll('[data-check-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this checklist?'))return;const {error}=await db.from('reusable_checklists').delete().eq('id',b.dataset.checkDelete).eq('owner_id',currentUser.id);if(error)toast(error.message);else navigate('checklists')})}
+async function renderClasses(root){const data=await rows('classes',db.from('classes').select('*').eq('teacher_id',currentUser.id).order('created_at',{ascending:false}));root.innerHTML=setPageHead('My classes','Create a class, then enroll student accounts.')+`<div class="card"><h2>Create a class</h2><form id="classForm"><div class="field"><label>Class name</label><input id="className" required placeholder="e.g. 6A"></div><button>Create class</button></form></div><div class="card"><h2>Enroll a student</h2><form id="enrollForm"><div class="field"><label>Class</label><select id="enrollClass" required>${data.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><div class="field"><label>Student account ID (UUID)</label><input id="studentUuid" required placeholder="Student's account ID"></div><button ${data.length?'':'disabled'}>Enroll student</button></form><p class="file-hint">For testing, use a test student account. Students can find their account ID in their profile support details.</p></div><div class="card"><h2>Your classes</h2><div class="stack">${data.map(c=>`<div class="item"><div class="item-title">${esc(c.name)}</div><span class="pill">Class</span></div>`).join('')||'<div class="empty">No classes created yet.</div>'}</div></div>`;$('classForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('classes').insert({name:$('className').value.trim(),teacher_id:currentUser.id});if(error)toast(error.message);else{toast('Class created');navigate('classes')}};$('enrollForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('class_members').insert({class_id:$('enrollClass').value,student_id:$('studentUuid').value.trim()});if(error)toast(error.message);else toast('Student enrolled') }}
+async function renderBooks(root){const students=await rows('book_students',db.from('book_students').select('*').eq('teacher_id',currentUser.id).order('student_name'));const records=await rows('book_corrections',db.from('book_corrections').select('*').eq('teacher_id',currentUser.id).order('created_at',{ascending:false}));root.innerHTML=setPageHead('Book Correction Tracker 📚','Keep track of every student’s exercise book.')+`<div class="card"><h2>Add a student</h2><form id="studentForm" class="form-row"><div class="field"><label>Student name (use a test name)</label><input id="studentName" required placeholder="e.g. Student 1"></div><div class="field"><label>Class</label><input id="studentClass" required placeholder="e.g. 6A"></div><div class="full"><button>Add student</button></div></form></div><div class="card"><h2>Correction records</h2><form id="bookWorkForm" class="form-row"><div class="field"><label>Student</label><select id="bookStudent" required>${students.map(s=>`<option value="${s.id}">${esc(s.student_name)} — ${esc(s.class_name)}</option>`).join('')}</select></div><div class="field"><label>Subject</label><input id="bookSubject" required placeholder="e.g. Science"></div><div class="field full"><label>Book / work</label><input id="bookWork" required placeholder="e.g. Chapter 3 exercise"></div><div class="full"><button ${students.length?'':'disabled'}>Add correction record</button></div></form></div><div class="card"><h2>Correction records</h2><div class="stack">${records.map(r=>{const s=students.find(x=>x.id===r.student_id);return `<div class="item"><div class="item-main"><div class="item-title">${esc(s?.student_name||'Student')} · ${esc(r.subject)}</div><div class="tiny muted">${esc(r.work||'')}</div></div><select data-book-status="${r.id}" class="inline-input" style="max-width:150px"><option ${r.status==='Not Checked'?'selected':''}>Not Checked</option><option ${r.status==='In Progress'?'selected':''}>In Progress</option><option ${r.status==='Corrected'?'selected':''}>Corrected</option></select></div>`}).join('')||'<div class="empty">No correction records yet.</div>'}</div></div>`;$('studentForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('book_students').insert({teacher_id:currentUser.id,student_name:$('studentName').value.trim(),class_name:$('studentClass').value.trim()});if(error)toast(error.message);else{toast('Student added');navigate('books')}};$('bookWorkForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('book_corrections').insert({teacher_id:currentUser.id,student_id:$('bookStudent').value,subject:$('bookSubject').value.trim(),work:$('bookWork').value.trim(),status:'Not Checked'});if(error)toast(error.message);else{toast('Correction record added');navigate('books')}};root.querySelectorAll('[data-book-status]').forEach(s=>s.onchange=async()=>{const {error}=await db.from('book_corrections').update({status:s.value,updated_at:new Date().toISOString()}).eq('id',s.dataset.bookStatus).eq('teacher_id',currentUser.id);if(error)toast(error.message);else toast('Status updated')})}
+async function renderMaterials(root){const teacher=isTeacher();const classes=teacher?await rows('classes',db.from('classes').select('*').eq('teacher_id',currentUser.id)):[];const data=teacher?await rows('materials',db.from('materials').select('*').eq('teacher_id',currentUser.id).order('created_at',{ascending:false})):await rows('materials',db.from('materials').select('*').order('created_at',{ascending:false}));root.innerHTML=setPageHead('Class materials',teacher?'Share learning materials with your enrolled students.':'Materials shared with your classes.')+(teacher?`<div class="card"><h2>Share material</h2><form id="materialForm"><div class="field"><label>Class</label><select id="materialClass" required>${classes.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><div class="form-row"><div class="field"><label>Subject</label><input id="materialSubject" required placeholder="Science"></div><div class="field"><label>Title</label><input id="materialTitle" required placeholder="Chapter 3 notes"></div></div><div class="field"><label>Notes / instructions</label><textarea id="materialContent" placeholder="Write the material or instructions here"></textarea></div><button ${classes.length?'':'disabled'}>Share with class</button></form></div>`:'')+`<div class="card"><h2>${teacher?'Shared materials':'Your materials'}</h2><div class="stack">${data.map(m=>`<div class="item"><div class="item-main"><div class="item-title">${esc(m.title||m.topic||'Class material')}</div><div class="tiny muted">${esc(m.subject||'')} · ${esc(m.content||m.notes_content||'')}</div></div></div>`).join('')||'<div class="empty">No materials to show yet.</div>'}</div></div>`;if(teacher)$('materialForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('materials').insert({teacher_id:currentUser.id,class_id:$('materialClass').value,subject:$('materialSubject').value.trim(),title:$('materialTitle').value.trim(),content:$('materialContent').value.trim()});if(error)toast(error.message);else{toast('Material shared');navigate('materials')}}}
+async function renderAwards(root){const teacher=isTeacher();let data=teacher?await rows('awards',db.from('awards').select('*').eq('teacher_id',currentUser.id).order('created_at',{ascending:false})):await rows('awards',db.from('awards').select('*').eq('student_id',currentUser.id).order('created_at',{ascending:false}));root.innerHTML=setPageHead(teacher?'Awards':'My awards',teacher?'Celebrate student achievements.':'Your achievements and encouragement.')+(teacher?`<div class="card"><h2>Give an award</h2><form id="awardForm"><div class="field"><label>Student account ID</label><input id="awardStudent" required placeholder="Student UUID"></div><div class="form-row"><div class="field"><label>Points</label><input id="awardPoints" type="number" min="1" value="1" required></div><div class="field"><label>Reason</label><input id="awardReason" required placeholder="Great effort"></div></div><button>Give award</button></form></div>`:'')+`<div class="card"><h2>${teacher?'Awards given':'Your awards'}</h2><div class="stack">${data.map(a=>`<div class="item"><div class="item-main"><div class="item-title">${esc(a.reason)}</div><div class="tiny muted">${new Date(a.created_at).toLocaleDateString()}</div></div><span class="pill gold">${a.points} points</span></div>`).join('')||'<div class="empty">No awards yet.</div>'}</div></div>`;if(teacher)$('awardForm').onsubmit=async e=>{e.preventDefault();const {error}=await db.from('awards').insert({teacher_id:currentUser.id,student_id:$('awardStudent').value.trim(),points:Number($('awardPoints').value),reason:$('awardReason').value.trim()});if(error)toast(error.message);else{toast('Award added');navigate('awards')}}}
+async function renderTests(root){const teacher=isTeacher();const data=teacher?await rows('test_results',db.from('test_results').select('*').eq('teacher_id',currentUser.id).order('created_at',{ascending:false})):await rows('test_results',db.from('test_results').select('*').eq('student_id',currentUser.id).order('created_at',{ascending:false}));root.innerHTML=setPageHead(teacher?'Test tracker':'My test results',teacher?'Record results and feedback.':'Review the results shared with you.')+(teacher?`<div class="card"><h2>Add a test result</h2><form id="testForm"><div class="field"><label>Student account ID</label><input id="testStudent" required placeholder="Student UUID"></div><div class="field"><label>Test name</label><input id="testName" required placeholder="Fractions quiz"></div><div class="form-row"><div class="field"><label>Score</label><input id="testScore" type="number" min="0" required></div><div class="field"><label>Out of</label><input id="testTotal" type="number" min="1" required></div></div><div class="field"><label>Teacher note</label><textarea id="testNote"></textarea></div><button>Save result</button></form></div>`:'')+`<div class="card"><h2>${teacher?'Recorded results':'Your results'}</h2><div class="stack">${data.map(t=>`<div class="item"><div class="item-main"><div class="item-title">${esc(t.test_name)}</div><div class="tiny muted">${esc(t.teacher_note||'')}</div></div><span class="pill">${t.score} / ${t.total}</span></div>`).join('')||'<div class="empty">No test results yet.</div>'}</div></div>`;if(teacher)$('testForm').onsubmit=async e=>{e.preventDefault();const score=Number($('testScore').value),total=Number($('testTotal').value);if(score>total){toast('Score cannot be greater than the total.');return}const {error}=await db.from('test_results').insert({teacher_id:currentUser.id,student_id:$('testStudent').value.trim(),test_name:$('testName').value.trim(),score,total,teacher_note:$('testNote').value.trim()});if(error)toast(error.message);else{toast('Test result saved');navigate('tests')}}}
+async function showEvidenceStatus(){const {data,error}=await db.from('teacher_applications').select('status,school_name').eq('user_id',currentUser.id).maybeSingle();if(error){$('evidenceStatus').innerHTML=`<div class="notice error">${esc(error.message)}</div>`;return}if(data)$('evidenceStatus').innerHTML=`<div class="notice">Application status: <b>${esc(data.status)}</b></div>`}
+async function submitEvidence(){const file=$('evidenceFile').files[0],school=$('evidenceSchool').value.trim();if(!file||!school){$('evidenceStatus').innerHTML='<div class="notice error">Enter your school name and choose an evidence file.</div>';return}if(file.size>5*1024*1024){$('evidenceStatus').innerHTML='<div class="notice error">Please choose a file smaller than 5 MB.</div>';return}const ext=(file.name.split('.').pop()||'file').toLowerCase();const path=`${currentUser.id}/${Date.now()}.${ext}`;const {error:uploadError}=await db.storage.from('teacher-evidence').upload(path,file,{upsert:false});if(uploadError){$('evidenceStatus').innerHTML=`<div class="notice error">${esc(uploadError.message)}</div>`;return}const {error}=await db.from('teacher_applications').update({school_name:school,evidence_path:path,status:'pending'}).eq('user_id',currentUser.id);if(error){$('evidenceStatus').innerHTML=`<div class="notice error">File uploaded, but application update failed: ${esc(error.message)}</div>`;return}$('evidenceStatus').innerHTML='<div class="notice">Evidence submitted. An administrator must review it before teacher access is granted.</div>'}
+async function renderApplications(root){const apps=await rows('teacher_applications',db.from('teacher_applications').select('*').order('submitted_at',{ascending:false}));root.innerHTML=setPageHead('Teacher applications','Review school evidence before approving teacher access.')+`<div class="card"><div class="stack">${apps.map(a=>`<div class="item"><div class="item-main"><div class="item-title">${esc(a.school_name||'School not provided')}</div><div class="tiny muted">Applicant: ${esc(a.user_id)} · ${esc(a.status)}</div></div><div class="actions"><button class="small" data-evidence="${a.user_id}" data-path="${esc(a.evidence_path||'')}">View evidence</button><button class="small" data-approve="${a.user_id}">Approve</button><button class="small danger" data-reject="${a.user_id}">Reject</button></div></div>`).join('')||'<div class="empty">No applications found.</div>'}</div><p class="file-hint">Only approve applicants whose school evidence you have checked through a trusted school contact or administrator.</p></div>`;root.querySelectorAll('[data-evidence]').forEach(b=>b.onclick=async()=>{if(!b.dataset.path){toast('No evidence file submitted.');return}const {data,error}=await db.storage.from('teacher-evidence').createSignedUrl(b.dataset.path,60);if(error)toast(error.message);else window.open(data.signedUrl,'_blank','noopener')});root.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>reviewApplication(b.dataset.approve,'approved'));root.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>reviewApplication(b.dataset.reject,'rejected'))}
+async function reviewApplication(userId,status){if(!confirm(`${status==='approved'?'Approve':'Reject'} this teacher application?`))return;const {error}=await db.from('teacher_applications').update({status,reviewed_at:new Date().toISOString(),reviewer_id:currentUser.id}).eq('user_id',userId);if(error){toast(error.message);return}if(status==='approved'){const {error:profileError}=await db.from('profiles').update({role:'teacher'}).eq('id',userId);if(profileError){toast('Application updated, but profile role update failed: '+profileError.message);return}}else{const {error:profileError}=await db.from('profiles').update({role:'pending_teacher'}).eq('id',userId);if(profileError){toast(profileError.message);return}}toast('Application reviewed');navigate('applications')}
+async function init(){if(!db){$('authMessage').innerHTML='<div class="notice error">Setup needed: replace the two Supabase placeholders near the bottom of this file.</div>';return}const {data:{session}}=await db.auth.getSession();if(session)try{await loadApp(session.user)}catch(e){message(e.message,true)}db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session&&!currentUser)loadApp(session.user).catch(e=>message(e.message,true))})}
+setAuthMode('login');init();
 </script>
-</body>
-</html>
-
+</body></html>
